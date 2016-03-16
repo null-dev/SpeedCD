@@ -23,3 +23,6 @@ Press: <kbd>ESC</kbd> to open a `Bash` shell in the current directory<br>
 2. Create an alias to the jar file by adding `alias scd="java -jar /path/to/the/binary/SpeedCD.jar"` to the end or your `~/.bashrc` file.
 3. Restart your terminal/shell.
 4. You are ready to go!
+
+## Libraries Used ##
+The only library used is [lanterna](https://github.com/mabe02/lanterna).
