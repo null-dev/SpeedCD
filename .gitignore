@@ -1,0 +1,5 @@
+/out
+/target
+*.jar
+SpeedCD.iml
+.idea/workspace.xml
