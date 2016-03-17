@@ -128,7 +128,7 @@ public class SpeedCD {
                                 boolean passedFilter = true;
                                 if(!showHiddenFiles && isHidden(file))
                                     passedFilter = false;
-                                if(passedFilter && !showFiles && !file.isFile())
+                                if(passedFilter && !showFiles && file.isFile())
                                     passedFilter = false;
                                 if(passedFilter)
                                     fileArrayList.add(file);
