@@ -14,6 +14,7 @@ import com.googlecode.lanterna.terminal.Terminal;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -50,6 +51,18 @@ public class SpeedCD {
     static final int MAX_COLUMNS_DIVISOR = 10;
     static final int MAX_PATH_WIDTH_DIVISOR = 2;
 
+    public static boolean isHidden(File file) {
+        String fileName = file.getName();
+        if(fileName.length() > 0) {
+            char firstChar = fileName.charAt(0);
+            char lastChar = fileName.charAt(fileName.length() - 1);
+            if(firstChar == '.' || lastChar == '~') {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static void main(String[] args) {
         //Create terminal
         Terminal terminal;
@@ -84,8 +97,11 @@ public class SpeedCD {
             int fileTextLength;
             String absolutePath = null;
             boolean completeRefresh = false;
+            boolean showHiddenFiles = true;
+            boolean showFiles = true;
 
-            File wd = new File("").getAbsoluteFile();
+            File startingDirectory = new File("").getAbsoluteFile();
+            File wd = startingDirectory;
             File[] fileList = null;
 
             boolean exit = false;
@@ -104,6 +120,21 @@ public class SpeedCD {
                             fileList = new File[0];
                         }
                         absolutePath = wd.getAbsolutePath();
+                        //Remove hidden files
+                        if(!showHiddenFiles
+                                || !showFiles) {
+                            ArrayList<File> fileArrayList = new ArrayList<>();
+                            for(File file : fileList) {
+                                boolean passedFilter = true;
+                                if(!showHiddenFiles && isHidden(file))
+                                    passedFilter = false;
+                                if(passedFilter && !showFiles && !file.isFile())
+                                    passedFilter = false;
+                                if(passedFilter)
+                                    fileArrayList.add(file);
+                            }
+                            fileList = fileArrayList.toArray(new File[fileArrayList.size()]);
+                        }
                         Arrays.sort(fileList);
                         filesDirty = false;
                     }
@@ -119,9 +150,21 @@ public class SpeedCD {
                             fileTableIndex = fileTables.length - 1;
                             fileTables[fileTableIndex].setCursorIndex(fileTables[fileTableIndex].getMaxFiles() - 1);
                         }
-                        fileText =
-                                fileList.length + " files | " + columns + " columns | Page: " + (fileTableIndex + 1) +
-                                        "/" + (fileTables.length);
+                        StringBuilder builder = new StringBuilder();
+                        StringBuilder modifiers = new StringBuilder();
+                        if(showHiddenFiles) {
+                            modifiers.append("H");
+                        }
+                        if(showFiles) {
+                            modifiers.append("F");
+                        }
+                        if(modifiers.length() > 0) {
+                            builder.append(modifiers);
+                            builder.append(" | ");
+                        }
+                        builder.append(fileList.length).append(" files | ").append(columns).append(" cols | Page: ")
+                                .append(fileTableIndex + 1).append("/").append(fileTables.length);
+                        fileText = builder.toString();
                     } else {
                         fileText = "Empty directory!";
                     }
@@ -209,6 +252,13 @@ public class SpeedCD {
                             } else if (stroke.getCharacter().equals('r') && stroke.isCtrlDown()) {
                                 //Refresh files
                                 filesDirty = true;
+                            } else if(stroke.getCharacter().equals('h') && stroke.isCtrlDown()) {
+                                //Show hidden files
+                                showHiddenFiles = !showHiddenFiles;
+                                filesDirty = true;
+                            } else if(stroke.getCharacter().equals('f') && stroke.isCtrlDown()) {
+                                showFiles = !showFiles;
+                                filesDirty = true;
                             } else {
                                 //Select file starting with letter
                                 if (fileTables.length > 0) {
@@ -228,7 +278,6 @@ public class SpeedCD {
                                             if (fileTables[table].selectFile(Character.toUpperCase(c))) {
                                                 if (!fileTables[table].selectFile(Character.toLowerCase(c))) {
                                                     fileTableIndex = table;
-                                                    found = true;
                                                     break;
                                                 }
                                             }
@@ -300,11 +349,13 @@ public class SpeedCD {
                 System.exit(-1);
                 return;
             }
-            //Invoke the shell
-            ProcessBuilder processBuilder = new ProcessBuilder(SHELL);
-            processBuilder.inheritIO();
-            processBuilder.directory(wd);
-            processBuilder.start().waitFor();
+            //Invoke the shell if we are not in the same starting directory
+            if(!wd.equals(startingDirectory)) {
+                ProcessBuilder processBuilder = new ProcessBuilder(SHELL);
+                processBuilder.inheritIO();
+                processBuilder.directory(wd);
+                processBuilder.start().waitFor();
+            }
             //Print path to shell
             //            System.out.println(wd.getAbsolutePath());
         } catch (Throwable t) {
