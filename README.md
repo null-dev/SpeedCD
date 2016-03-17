@@ -19,7 +19,7 @@ Press: <kbd>CTRL</kbd>+<kbd>r</kbd> to refresh the view (if files have been adde
 Press: <kbd>CTRL</kbd>+<kbd>h</kbd> to hide/show hidden files<br>
 Press: <kbd>CTRL</kbd>+<kbd>f</kbd> to hide/show files<br>
 Use the arrow keys to move the cursor.<br>
-Press any letter/number on the keyboard to jump to the first file that starts with that letter/number.
+Press any letter/number on the keyboard to jump to the first file that starts with that letter/number.<br>
 Press: <kbd>ESC</kbd> to open a `Bash` shell in the current directory<br>
 
 ## Installation ##
