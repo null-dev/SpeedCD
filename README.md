@@ -16,13 +16,15 @@ Press: <kbd>Backspace</kbd> to go up the directory tree<br>
 Press: <kbd>Enter</kbd> to enter a directory<br>
 Press: <kbd>CTRL</kbd>+<kbd>r</kbd> to refresh the view (if files have been added/removed from the directory)<br>
 Use the arrow keys to move the cursor.<br>
+Press any letter/number on the keyboard to jump to the first file that starts with that letter/number.
 Press: <kbd>ESC</kbd> to open a `Bash` shell in the current directory<br>
 
-## Installation ##
-1. Download a binary from the [releases](https://github.com/null-dev/SpeedCD/releases) section.
-2. Create an alias to the jar file by adding `alias scd="java -jar /path/to/the/binary/SpeedCD.jar"` to the end or your `~/.bashrc` file.
-3. Restart your terminal/shell.
-4. You are ready to go!
+## Installation ##1
+1. Download and install the Java 8 runtime.
+2. Download a binary from the [releases](https://github.com/null-dev/SpeedCD/releases) section.
+3. Create an alias to the jar file by adding `alias scd="java -jar /path/to/the/binary/SpeedCD.jar"` to the end or your `~/.bashrc` file.
+4. Restart your terminal/shell.
+5. You are ready to go!
 
 ## Libraries Used ##
-The only library used is [lanterna](https://github.com/mabe02/lanterna).
+The only library used is [lanterna](https://github.com/mabe02/lanterna). It is embedded into the projects because it had to be modified.

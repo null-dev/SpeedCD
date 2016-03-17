@@ -25,8 +25,8 @@
         <module name="SpeedCD" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="SpeedCD" target="1.5" />
+    <bytecodeTargetLevel target="1.7">
+      <module name="SpeedCD" target="1.7" />
     </bytecodeTargetLevel>
   </component>
 </project>
