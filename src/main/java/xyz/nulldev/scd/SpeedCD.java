@@ -1,6 +1,7 @@
 package xyz.nulldev.scd;
 
 import com.googlecode.lanterna.TerminalPosition;
+import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextCharacter;
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.input.KeyStroke;
@@ -82,13 +83,19 @@ public class SpeedCD {
             String fileText;
             int fileTextLength;
             String absolutePath = null;
+            boolean completeRefresh = false;
 
             File wd = new File("").getAbsoluteFile();
             File[] fileList = null;
 
             boolean exit = false;
             while (!exit) {
-                screen.doResizeIfNecessary();
+                TerminalSize size = screen.doResizeIfNecessary();
+                if (size == null) {
+                    size = screen.getTerminalSize();
+                } else {
+                    completeRefresh = true;
+                }
                 if (filesDirty) fileTablesDirty = true;
                 try {
                     if (filesDirty) {
@@ -100,7 +107,7 @@ public class SpeedCD {
                         Arrays.sort(fileList);
                         filesDirty = false;
                     }
-                    int termHeight = terminal.getTerminalSize().getRows();
+                    int termHeight = size.getRows();
                     int termHeightWithHeader = termHeight - 1;
                     if (fileList.length > 0) {
                         if (fileTablesDirty) {
@@ -121,7 +128,7 @@ public class SpeedCD {
                     fileTextLength = fileText.length();
                     screen.clear();
                     //Draw file table and scroll indicators
-                    int termWidth = terminal.getTerminalSize().getColumns();
+                    int termWidth = size.getColumns();
                     int startX = 0;
                     if (fileTableIndex > 0 && fileTables.length > 1) {
                         startX = 1;
@@ -171,7 +178,14 @@ public class SpeedCD {
                                 character.withBackgroundColor(HEADER_BCK_COLOR).withForegroundColor(HEADER_FORE_COLOR);
                         screen.setCharacter(x, 0, character);
                     }
-                    screen.refresh(Screen.RefreshType.AUTOMATIC);
+                    Screen.RefreshType refreshType;
+                    if(completeRefresh) {
+                        refreshType = Screen.RefreshType.COMPLETE;
+                        completeRefresh = false;
+                    } else {
+                        refreshType = Screen.RefreshType.DELTA;
+                    }
+                    screen.refresh(refreshType);
                 } catch (IOException ignored) {
                 }
                 try {
@@ -185,7 +199,7 @@ public class SpeedCD {
                                     fileTablesDirty = true;
                                 }
                             } else if (stroke.getCharacter().equals('+') || stroke.getCharacter().equals('=')) {
-                                int screenColumns = screen.getTerminalSize().getColumns();
+                                int screenColumns = size.getColumns();
                                 int maxColumns =
                                         (screenColumns - (screenColumns % MAX_COLUMNS_DIVISOR)) / MAX_COLUMNS_DIVISOR;
                                 if (columns < maxColumns) {
