@@ -99,6 +99,20 @@ public class FileTable {
         return true;
     }
 
+    public boolean selectFile(File file) {
+        int fileIndex = 0;
+        for (int x = 0; x < columns; x++) {
+            for (int y = 0; y < rows; y++) {
+                if(file.equals(fileTable[x][y])) {
+                    cursorIndex = fileIndex;
+                    return false;
+                }
+                fileIndex++;
+            }
+        }
+        return true;
+    }
+
     public boolean cursorDown() {
         if (cursorIndex < maxFiles - 1) {
             cursorIndex++;

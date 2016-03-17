@@ -96,6 +96,7 @@ public class SpeedCD {
             String fileText;
             int fileTextLength;
             String absolutePath = null;
+            File selectionToRestore = null;
             boolean completeRefresh = false;
             boolean showHiddenFiles = true;
             boolean showFiles = true;
@@ -112,6 +113,9 @@ public class SpeedCD {
                 } else {
                     completeRefresh = true;
                     fileTablesDirty = true;
+                    if(fileTables.length > 0) {
+                        selectionToRestore = fileTables[fileTableIndex].getSelectedFile();
+                    }
                 }
                 if (filesDirty) fileTablesDirty = true;
                 try {
@@ -166,6 +170,16 @@ public class SpeedCD {
                         builder.append(fileList.length).append(" files | ").append(columns).append(" cols | Page: ")
                                 .append(fileTableIndex + 1).append("/").append(fileTables.length);
                         fileText = builder.toString();
+                        //Restore selection
+                        if(selectionToRestore != null) {
+                            for(int fileTableId = 0; fileTableId < fileTables.length; fileTableId++) {
+                                if(!fileTables[fileTableId].selectFile(selectionToRestore)) {
+                                    fileTableIndex = fileTableId;
+                                    break;
+                                }
+                            }
+                            selectionToRestore = null;
+                        }
                     } else {
                         fileText = "Empty directory!";
                     }
@@ -319,6 +333,7 @@ public class SpeedCD {
                             }
                             if (stroke.getKeyType() == KeyType.Backspace) {
                                 if (wd.getParentFile() != null) {
+                                    selectionToRestore = wd;
                                     wd = wd.getParentFile();
                                     filesDirty = true;
                                 }
