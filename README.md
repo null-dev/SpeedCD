@@ -3,7 +3,7 @@
 
 ## About ##
 SpeedCD is a CLI program that allows you to navigate any filesystem at the speed of light!
-SpeedCD is **not** a file manager, it will not open/maniplate files and folders.
+SpeedCD is **not** a file manager, it will not open/maniplate files.
 Check out a demo here (ignore the flickering, it's because of the recording software):
 [![asciicast](https://asciinema.org/a/2wedxpqaf8nsojx9lep5ki9zv.png)](https://asciinema.org/a/2wedxpqaf8nsojx9lep5ki9zv)
 The usage of SpeedCD starts at: [0:27](https://asciinema.org/a/2wedxpqaf8nsojx9lep5ki9zv?t=0:27)
