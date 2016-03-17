@@ -20,7 +20,7 @@ Press any letter/number on the keyboard to jump to the first file that starts wi
 Press: <kbd>ESC</kbd> to open a `Bash` shell in the current directory<br>
 
 ## Installation ##1
-1. Download and install the Java 8 runtime.
+1. Download and install the Java 7 runtime.
 2. Download a binary from the [releases](https://github.com/null-dev/SpeedCD/releases) section.
 3. Create an alias to the jar file by adding `alias scd="java -jar /path/to/the/binary/SpeedCD.jar"` to the end or your `~/.bashrc` file.
 4. Restart your terminal/shell.
