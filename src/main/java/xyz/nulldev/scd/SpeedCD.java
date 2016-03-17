@@ -111,6 +111,7 @@ public class SpeedCD {
                     size = screen.getTerminalSize();
                 } else {
                     completeRefresh = true;
+                    fileTablesDirty = true;
                 }
                 if (filesDirty) fileTablesDirty = true;
                 try {
@@ -176,7 +177,7 @@ public class SpeedCD {
                     if (fileTableIndex > 0 && fileTables.length > 1) {
                         startX = 1;
                         //Scroll indicators
-                        for (int y = 0; y < termHeight; y++) {
+                        for (int y = 1; y < termHeight; y++) {
                             screen.setCharacter(0, y, SCROLL_LEFT_CHAR);
                         }
                     }
@@ -184,7 +185,7 @@ public class SpeedCD {
                     if (fileTableIndex < fileTables.length - 1) {
                         tableTermWidth--;
                         //Scroll indicators
-                        for (int y = 0; y < termHeight; y++) {
+                        for (int y = 1; y < termHeight; y++) {
                             screen.setCharacter(termWidth - 1, y, SCROLL_RIGHT_CHAR);
                         }
                     }
