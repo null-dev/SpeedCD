@@ -3,6 +3,7 @@
 
 ## About ##
 SpeedCD is a CLI program that allows you to navigate any filesystem at the speed of light!
+SpeedCD is **not** a file manager, it will not open/maniplate files.
 Check out a demo here (ignore the flickering, it's because of the recording software):
 [![asciicast](https://asciinema.org/a/2wedxpqaf8nsojx9lep5ki9zv.png)](https://asciinema.org/a/2wedxpqaf8nsojx9lep5ki9zv)
 The usage of SpeedCD starts at: [0:27](https://asciinema.org/a/2wedxpqaf8nsojx9lep5ki9zv?t=0:27)
@@ -18,10 +19,10 @@ Press: <kbd>CTRL</kbd>+<kbd>r</kbd> to refresh the view (if files have been adde
 Press: <kbd>CTRL</kbd>+<kbd>h</kbd> to hide/show hidden files<br>
 Press: <kbd>CTRL</kbd>+<kbd>f</kbd> to hide/show files<br>
 Use the arrow keys to move the cursor.<br>
-Press any letter/number on the keyboard to jump to the first file that starts with that letter/number.
+Press any letter/number on the keyboard to jump to the first file that starts with that letter/number.<br>
 Press: <kbd>ESC</kbd> to open a `Bash` shell in the current directory<br>
 
-## Installation ##1
+## Installation ##
 1. Download and install the Java 7 runtime.
 2. Download a binary from the [releases](https://github.com/null-dev/SpeedCD/releases) section.
 3. Create an alias to the jar file by adding `alias scd="java -jar /path/to/the/binary/SpeedCD.jar"` to the end or your `~/.bashrc` file.
