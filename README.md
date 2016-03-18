@@ -20,7 +20,11 @@ Press: <kbd>CTRL</kbd>+<kbd>h</kbd> to hide/show hidden files<br>
 Press: <kbd>CTRL</kbd>+<kbd>f</kbd> to hide/show files<br>
 Use the arrow keys to move the cursor.<br>
 Press any letter/number on the keyboard to jump to the first file that starts with that letter/number.<br>
-Press: <kbd>ESC</kbd> to open a `Bash` shell in the current directory<br>
+Press: <kbd>ESC</kbd> to open a shell in the current directory<br>
+
+## Configuration ##
+Configuration settings are available by passing in command-line arguments:
+* `--shell=` Specify the shell to be opened when <kbd>ESC</kbd> is pressed. Example: `--shell=zsh`
 
 ## Installation ##
 1. Download and install the Java 7 runtime.
