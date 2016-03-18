@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * Project: SpeedCD
@@ -23,8 +24,6 @@ import java.util.Arrays;
  * Author: nulldev
  */
 public class SpeedCD {
-
-    public static final String SHELL = "bash";
 
     public static final TextColor HEADER_BCK_COLOR = TextColor.ANSI.GREEN;
     public static final TextColor HEADER_FORE_COLOR = TextColor.ANSI.BLACK;
@@ -63,7 +62,41 @@ public class SpeedCD {
         return false;
     }
 
+    public static HashMap<String, String> parseArgs(String... args) {
+        HashMap<String, String> outMap = new HashMap<>();
+        for(String arg : args) {
+            String s = arg;
+            //Strip off dashes
+            int dashes = 0;
+            for(int i = 0; i < s.length(); i++) {
+                if(s.charAt(i) == '-') {
+                    dashes++;
+                } else {
+                    s = s.substring(dashes);
+                    break;
+                }
+            }
+            //Remove any quotes
+            s = s.replace("\"", "").replace("'", "");
+            //Find equal sign
+            int equalIndex = s.indexOf('=');
+            //Ignore argument if no equal sign
+            if(equalIndex == -1) {
+                continue;
+            }
+            String key = s.substring(0, equalIndex).toLowerCase();
+            String value = s.substring(equalIndex+1);
+            outMap.put(key, value);
+        }
+        return outMap;
+    }
+
     public static void main(String[] args) {
+        HashMap<String, String> argsMap = parseArgs(args);
+        String shell = "bash";
+        if(argsMap.containsKey("shell")) {
+            shell = argsMap.get("shell");
+        }
         //Create terminal
         Terminal terminal;
         Screen screen = null;
@@ -367,7 +400,7 @@ public class SpeedCD {
             }
             //Invoke the shell if we are not in the same starting directory
             if(!wd.equals(startingDirectory)) {
-                ProcessBuilder processBuilder = new ProcessBuilder(SHELL);
+                ProcessBuilder processBuilder = new ProcessBuilder(shell);
                 processBuilder.inheritIO();
                 processBuilder.directory(wd);
                 processBuilder.start().waitFor();
