@@ -1,0 +1,1 @@
+APTB="---> REPLACE ME <---";scd() { t=$(mktemp /tmp/speedcd.XXXXXX);java -jar "$APTB" "--pathFile=$t";s=$(cat "$t");cd "$s";rm "$t";}

@@ -25,11 +25,12 @@ Press: <kbd>ESC</kbd> to open a shell in the current directory<br>
 ## Configuration ##
 Configuration settings are available by passing in command-line arguments:
 * `--shell=` Specify the shell to be opened when <kbd>ESC</kbd> is pressed. Example: `--shell=zsh`
+* `--pathFile=` Specify a file to write the resulting path to when <kbd>ESC</kbd> is pressed. Overrides `--shell=` Example: `--pathFile=/tmp/speedcd.123456.tmp`
 
 ## Installation ##
 1. Download and install the Java 7 runtime.
 2. Download a binary from the [releases](https://github.com/null-dev/SpeedCD/releases) section.
-3. Create an alias to the jar file by adding `alias scd="java -jar /path/to/the/binary/SpeedCD.jar"` to the end or your `~/.bashrc` file.
+3. Create an alias to the jar file by adding `APTB="---> REPLACE ME <---";scd() { t=$(mktemp /tmp/speedcd.XXXXXX);java -jar "$APTB" "--pathFile=$t";s=$(cat "$t");cd "$s";rm "$t";}` to the end of your `~/.bashrc` file (replace `---> REPLACE ME <---` with the path to the SpeedCD binary).
 4. Restart your terminal/shell.
 5. You are ready to go!
 

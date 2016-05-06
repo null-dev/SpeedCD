@@ -11,8 +11,7 @@ import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.Terminal;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -96,6 +95,13 @@ public class SpeedCD {
         String shell = "bash";
         if(argsMap.containsKey("shell")) {
             shell = argsMap.get("shell");
+        }
+        //Path file from args
+        String pathFile = null;
+        if(argsMap.containsKey("pathFile")) {
+            pathFile = argsMap.get("pathFile");
+        } else if(argsMap.containsKey("pathfile")) {
+            pathFile = argsMap.get("pathfile");
         }
         //Create terminal
         Terminal terminal;
@@ -398,12 +404,27 @@ public class SpeedCD {
                 System.exit(-1);
                 return;
             }
-            //Invoke the shell if we are not in the same starting directory
-            if(!wd.equals(startingDirectory)) {
-                ProcessBuilder processBuilder = new ProcessBuilder(shell);
-                processBuilder.inheritIO();
-                processBuilder.directory(wd);
-                processBuilder.start().waitFor();
+            if(pathFile != null) {
+                //Write path to pathfile
+                File pathFileRef = new File(pathFile);
+                if(!pathFileRef.exists()) {
+                    if(!pathFileRef.createNewFile()) {
+                        System.out.println("ERROR: Failed to create path file!");
+                        System.exit(-1);
+                        return;
+                    }
+                }
+                try (PrintStream stream = new PrintStream(new FileOutputStream(pathFileRef))) {
+                    stream.print(wd.getAbsolutePath());
+                }
+            } else {
+                //Invoke the shell if we are not in the same starting directory
+                if (!wd.equals(startingDirectory)) {
+                    ProcessBuilder processBuilder = new ProcessBuilder(shell);
+                    processBuilder.inheritIO();
+                    processBuilder.directory(wd);
+                    processBuilder.start().waitFor();
+                }
             }
             //Print path to shell
             //            System.out.println(wd.getAbsolutePath());
