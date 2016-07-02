@@ -436,6 +436,7 @@ public class SpeedCD {
                             } else if (stroke.getKeyType() == KeyType.Escape) {
                                 if(searchText != null) {
                                     searchText = null;
+                                    filesDirty = true;
                                 } else {
                                     exit = true;
                                 }
