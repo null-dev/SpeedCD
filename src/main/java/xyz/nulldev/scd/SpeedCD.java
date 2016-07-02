@@ -373,7 +373,7 @@ public class SpeedCD {
                                 filesDirty = true;
                             } else if(!KeyType.Backspace.equals(stroke.getKeyType())
                                     && !KeyType.Enter.equals(stroke.getKeyType())
-                                    && fileList.length > 0) {
+                                    && (fileList.length > 0 || searchText != null)) {
                                 //Append to search text
                                 if(searchText == null) {
                                     searchText = "";
