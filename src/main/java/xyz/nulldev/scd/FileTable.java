@@ -99,6 +99,22 @@ public class FileTable {
         return true;
     }
 
+    public boolean selectFile(String s) {
+        int fileIndex = 0;
+        for (int x = 0; x < columns; x++) {
+            for (int y = 0; y < rows; y++) {
+                if (fileTable[x][y] == null) continue;
+                String fname = fileTable[x][y].getName();
+                if (fname.length() > 1 && fname.startsWith(s)) {
+                    cursorIndex = fileIndex;
+                    return false;
+                }
+                fileIndex++;
+            }
+        }
+        return true;
+    }
+
     public boolean selectFile(File file) {
         int fileIndex = 0;
         for (int x = 0; x < columns; x++) {

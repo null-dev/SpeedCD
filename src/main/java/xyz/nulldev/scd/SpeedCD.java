@@ -13,9 +13,7 @@ import com.googlecode.lanterna.terminal.Terminal;
 
 import java.io.*;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.*;
 
 /**
  * Project: SpeedCD
@@ -25,6 +23,7 @@ import java.util.HashMap;
 public class SpeedCD {
 
     public static final TextColor HEADER_BCK_COLOR = TextColor.ANSI.GREEN;
+    public static final TextColor HEADER_SEARCH_BCK_COLOR = TextColor.ANSI.BLUE;
     public static final TextColor HEADER_FORE_COLOR = TextColor.ANSI.BLACK;
     public static final TextColor SCROLL_INDICATOR_BCK_COLOR = TextColor.ANSI.DEFAULT;
     public static final TextColor SCROLL_INDICATOR_FORE_COLOR = TextColor.ANSI.CYAN;
@@ -32,8 +31,8 @@ public class SpeedCD {
     public static final TextColor SELECT_BCK_COLOR = TextColor.ANSI.BLUE;
     public static final TextColor SELECT_FORE_COLOR = TextColor.ANSI.BLACK;
 
-    public static final TextColor NO_FILES_BCK_COLOR = TextColor.ANSI.YELLOW;
-    public static final TextColor NO_FILE_FORE_COLOR = TextColor.ANSI.BLACK;
+    public static final TextColor WARNING_BCK_COLOR = TextColor.ANSI.YELLOW;
+    public static final TextColor WARNING_FORE_COLOR = TextColor.ANSI.BLACK;
 
     public static final TextCharacter SCROLL_LEFT_CHAR =
             new TextCharacter('<').withBackgroundColor(SCROLL_INDICATOR_BCK_COLOR)
@@ -45,6 +44,9 @@ public class SpeedCD {
 
     public static String PATH_CUT_OFF_STRING = "...";
     public static String NO_FILES_WARNING = "This directory is empty!";
+    public static String SEARCH_NO_RESULTS_WARNING = "The search returned no results!";
+    public static String SEARCH_NO_RESULTS_WARNING_NO_CLEAR = "The search returned no results (or this directory is empty)!";
+    public static String SEARCH_PREFIX = "SEARCH: ";
 
     static final int MAX_COLUMNS_DIVISOR = 10;
     static final int MAX_PATH_WIDTH_DIVISOR = 2;
@@ -103,6 +105,16 @@ public class SpeedCD {
         } else if(argsMap.containsKey("pathfile")) {
             pathFile = argsMap.get("pathfile");
         }
+        //Clear search on directory switch?
+        boolean clearSearchOnDirectorySwitch = true;
+        if(argsMap.containsKey("clearsearchondirectoryswitch")) {
+            clearSearchOnDirectorySwitch = Boolean.parseBoolean("clearsearchondirectoryswitch");
+        }
+        //Case sensitive search?
+        boolean caseSensitiveSearch = true;
+        if(argsMap.containsKey("casesensitivesearch")) {
+            caseSensitiveSearch = Boolean.parseBoolean("casesensitivesearch");
+        }
         //Create terminal
         Terminal terminal;
         Screen screen = null;
@@ -139,6 +151,7 @@ public class SpeedCD {
             boolean completeRefresh = false;
             boolean showHiddenFiles = true;
             boolean showFiles = true;
+            String searchText = null;
 
             File startingDirectory = new File("").getAbsoluteFile();
             File wd = startingDirectory;
@@ -178,6 +191,30 @@ public class SpeedCD {
                                     fileArrayList.add(file);
                             }
                             fileList = fileArrayList.toArray(new File[fileArrayList.size()]);
+                        }
+                        //Filter out only files matched by search
+                        if(searchText != null) {
+                            String lowercaseSearchText;
+                            if(!caseSensitiveSearch) {
+                                lowercaseSearchText = searchText.toLowerCase();
+                            } else {
+                                lowercaseSearchText = null;
+                            }
+                            if (fileTables.length > 0) {
+                                List<File> fileArrayList = new ArrayList<>();
+                                for(File file : fileList) {
+                                    if(caseSensitiveSearch) {
+                                        if (file.getName().startsWith(searchText)) {
+                                            fileArrayList.add(file);
+                                        }
+                                    } else {
+                                        if (file.getName().toLowerCase().startsWith(lowercaseSearchText)) {
+                                            fileArrayList.add(file);
+                                        }
+                                    }
+                                }
+                                fileList = fileArrayList.toArray(new File[fileArrayList.size()]);
+                            }
                         }
                         Arrays.sort(fileList);
                         filesDirty = false;
@@ -246,18 +283,36 @@ public class SpeedCD {
                         fileTables[fileTableIndex].drawTable(screen, startX, 1, tableTermWidth);
                     } else {
                         //Draw no files warning!
-                        int remainingWidth = termWidth - NO_FILES_WARNING.length();
+                        String warning;
+                        if(searchText != null) {
+                            if(clearSearchOnDirectorySwitch) {
+                                warning = SEARCH_NO_RESULTS_WARNING;
+                            } else {
+                                warning = SEARCH_NO_RESULTS_WARNING_NO_CLEAR;
+                            }
+                        } else {
+                            warning = NO_FILES_WARNING;
+                        }
+                        int remainingWidth = termWidth - warning.length();
                         int xCenter = (remainingWidth - (remainingWidth % 2)) / 2;
                         int yCenter = (termHeightWithHeader - (termHeightWithHeader % 2)) / 2;
-                        for (int x = 0; x < NO_FILES_WARNING.length(); x++) {
-                            screen.setCharacter(x + xCenter, yCenter, new TextCharacter(NO_FILES_WARNING.charAt(x))
-                                    .withBackgroundColor(NO_FILES_BCK_COLOR).withForegroundColor(NO_FILE_FORE_COLOR));
+                        for (int x = 0; x < warning.length(); x++) {
+                            screen.setCharacter(x + xCenter, yCenter, new TextCharacter(warning.charAt(x))
+                                    .withBackgroundColor(WARNING_BCK_COLOR).withForegroundColor(WARNING_FORE_COLOR));
                             screen.setCursorPosition(new TerminalPosition(0, 1));
                         }
                     }
                     //Draw header
                     int maxPathWidth = (termWidth - (termWidth % MAX_PATH_WIDTH_DIVISOR)) / MAX_PATH_WIDTH_DIVISOR;
-                    String path = absolutePath;
+                    String path;
+                    TextColor leftHeaderBackgroundColor;
+                    if(searchText != null) {
+                        path = SEARCH_PREFIX + searchText;
+                        leftHeaderBackgroundColor = HEADER_SEARCH_BCK_COLOR;
+                    } else {
+                        path = absolutePath;
+                        leftHeaderBackgroundColor = HEADER_BCK_COLOR;
+                    }
                     if (path.length() > maxPathWidth) {
                         path = PATH_CUT_OFF_STRING +
                                 path.substring(path.length() - maxPathWidth + PATH_CUT_OFF_STRING.length());
@@ -266,13 +321,16 @@ public class SpeedCD {
                         TextCharacter character;
                         if (x < path.length()) {
                             character = new TextCharacter(path.charAt(x));
-                        } else if (x > termWidth - fileTextLength - 1) {
-                            character = new TextCharacter(fileText.charAt(fileTextLength - (termWidth - x)));
+                            character = character.withBackgroundColor(leftHeaderBackgroundColor);
                         } else {
-                            character = new TextCharacter(' ');
+                            if (x > termWidth - fileTextLength - 1) {
+                                character = new TextCharacter(fileText.charAt(fileTextLength - (termWidth - x)));
+                            } else {
+                                character = new TextCharacter(' ');
+                            }
+                            character = character.withBackgroundColor(HEADER_BCK_COLOR);
                         }
-                        character =
-                                character.withBackgroundColor(HEADER_BCK_COLOR).withForegroundColor(HEADER_FORE_COLOR);
+                        character = character.withForegroundColor(HEADER_FORE_COLOR);
                         screen.setCharacter(x, 0, character);
                     }
                     Screen.RefreshType refreshType;
@@ -313,31 +371,15 @@ public class SpeedCD {
                             } else if(stroke.getCharacter().equals('f') && stroke.isCtrlDown()) {
                                 showFiles = !showFiles;
                                 filesDirty = true;
-                            } else {
-                                //Select file starting with letter
-                                if (fileTables.length > 0) {
-                                    char c = stroke.getCharacter();
-                                    boolean found = false;
-                                    //First search for original case version
-                                    for (int table = 0; table < fileTables.length; table++) {
-                                        if (!fileTables[table].selectFile(c)) {
-                                            fileTableIndex = table;
-                                            found = true;
-                                            break;
-                                        }
-                                    }
-                                    if (!found) {
-                                        for (int table = 0; table < fileTables.length; table++) {
-                                            //Try upper and lower case
-                                            if (fileTables[table].selectFile(Character.toUpperCase(c))) {
-                                                if (!fileTables[table].selectFile(Character.toLowerCase(c))) {
-                                                    fileTableIndex = table;
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    }
+                            } else if(!KeyType.Backspace.equals(stroke.getKeyType())
+                                    && !KeyType.Enter.equals(stroke.getKeyType())
+                                    && fileList.length > 0) {
+                                //Append to search text
+                                if(searchText == null) {
+                                    searchText = "";
                                 }
+                                searchText += stroke.getCharacter();
+                                filesDirty = true;
                             }
                         }
                         if (stroke.getKeyType() != null) {
@@ -366,18 +408,37 @@ public class SpeedCD {
                                     File selectedFile = fileTables[fileTableIndex].getSelectedFile();
                                     if (selectedFile != null && selectedFile.isDirectory()) {
                                         wd = selectedFile;
+                                        if(clearSearchOnDirectorySwitch) {
+                                            searchText = null;
+                                        }
                                         filesDirty = true;
                                     }
                                 }
                             }
                             if (stroke.getKeyType() == KeyType.Backspace) {
-                                if (wd.getParentFile() != null) {
-                                    selectionToRestore = wd;
-                                    wd = wd.getParentFile();
+                                if(searchText != null) {
+                                    //Backspace on search instead
+                                    searchText = searchText.substring(0, searchText.length() - 1);
+                                    if(searchText.isEmpty()) {
+                                        searchText = null;
+                                    }
                                     filesDirty = true;
+                                } else {
+                                    if (wd.getParentFile() != null) {
+                                        selectionToRestore = wd;
+                                        wd = wd.getParentFile();
+                                        if(clearSearchOnDirectorySwitch) {
+                                            searchText = null;
+                                        }
+                                        filesDirty = true;
+                                    }
                                 }
                             } else if (stroke.getKeyType() == KeyType.Escape) {
-                                exit = true;
+                                if(searchText != null) {
+                                    searchText = null;
+                                } else {
+                                    exit = true;
+                                }
                             }
                         }
                     }
@@ -388,7 +449,6 @@ public class SpeedCD {
                     return;
                 }
             }
-
             try {
                 screen.stopScreen();
                 //Even with stopScreen() the terminal's state is still not completely restored!
