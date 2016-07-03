@@ -157,7 +157,7 @@ public class SpeedCD {
 
             File startingDirectory = new File("").getAbsoluteFile();
             File wd = startingDirectory;
-            File[] fileList = null;
+            List<File> fileList = null;
 
             //Main terminal loop
             boolean exit = false;
@@ -178,25 +178,29 @@ public class SpeedCD {
                 try {
                     if (filesDirty) {
                         //Generate file list
-                        fileList = wd.listFiles();
-                        if (fileList == null) {
-                            fileList = new File[0];
+                        File[] fileArray = wd.listFiles();
+                        if (fileArray == null) {
+                            fileList = new ArrayList<>();
+                        } else {
+                            fileList = new ArrayList<>(fileArray.length);
+                            Collections.addAll(fileList, fileArray);
                         }
                         absolutePath = wd.getAbsolutePath();
                         //Remove hidden files
                         if (!showHiddenFiles
                                 || !showFiles) {
-                            ArrayList<File> fileArrayList = new ArrayList<>();
-                            for (File file : fileList) {
+                            Iterator<File> fileIterator = fileList.iterator();
+                            while(fileIterator.hasNext()) {
+                                File file = fileIterator.next();
                                 boolean passedFilter = true;
                                 if (!showHiddenFiles && isHidden(file))
                                     passedFilter = false;
                                 if (passedFilter && !showFiles && file.isFile())
                                     passedFilter = false;
-                                if (passedFilter)
-                                    fileArrayList.add(file);
+                                if (!passedFilter) {
+                                    fileIterator.remove();
+                                }
                             }
-                            fileList = fileArrayList.toArray(new File[fileArrayList.size()]);
                         }
                         //Filter out only files matched by search
                         if (searchText != null) {
@@ -207,28 +211,32 @@ public class SpeedCD {
                                 lowercaseSearchText = null;
                             }
                             if (fileTables.length > 0) {
-                                List<File> fileArrayList = new ArrayList<>();
-                                for (File file : fileList) {
+                                Iterator<File> fileIterator = fileList.iterator();
+                                while(fileIterator.hasNext()) {
+                                    File file = fileIterator.next();
+                                    boolean passedFilter = false;
                                     if (caseSensitiveSearch) {
                                         if (file.getName().startsWith(searchText)) {
-                                            fileArrayList.add(file);
+                                            passedFilter = true;
                                         }
                                     } else {
                                         if (file.getName().toLowerCase().startsWith(lowercaseSearchText)) {
-                                            fileArrayList.add(file);
+                                            passedFilter = true;
                                         }
                                     }
+                                    if(!passedFilter) {
+                                        fileIterator.remove();
+                                    }
                                 }
-                                fileList = fileArrayList.toArray(new File[fileArrayList.size()]);
                             }
                         }
                         //Sort files
-                        Arrays.sort(fileList);
+                        Collections.sort(fileList);
                         filesDirty = false;
                     }
                     int termHeight = size.getRows();
                     int termHeightWithHeader = termHeight - 1;
-                    if (fileList.length > 0) {
+                    if (!fileList.isEmpty()) {
                         if (fileTablesDirty) {
                             fileTables = FileTable.generateFileTables(fileList, columns, termHeightWithHeader);
                             fileTablesDirty = false;
@@ -251,7 +259,7 @@ public class SpeedCD {
                             builder.append(modifiers);
                             builder.append(" | ");
                         }
-                        builder.append(fileList.length).append(" files | ").append(columns).append(" cols | Page: ")
+                        builder.append(fileList.size()).append(" files | ").append(columns).append(" cols | Page: ")
                                 .append(fileTableIndex + 1).append("/").append(fileTables.length);
                         fileText = builder.toString();
                         //Restore selection
@@ -289,7 +297,7 @@ public class SpeedCD {
                             screen.setCharacter(termWidth - 1, y, SCROLL_RIGHT_CHAR);
                         }
                     }
-                    if (fileList.length > 0) {
+                    if (!fileList.isEmpty()) {
                         fileTables[fileTableIndex].drawTable(screen, startX, 1, tableTermWidth);
                     } else {
                         //Draw no files warning!
@@ -386,7 +394,7 @@ public class SpeedCD {
                                 filesDirty = true;
                             } else if (!KeyType.Backspace.equals(stroke.getKeyType())
                                     && !KeyType.Enter.equals(stroke.getKeyType())
-                                    && (fileList.length > 0 || searchText != null)) {
+                                    && (!fileList.isEmpty() || searchText != null)) {
                                 //Append to search text
                                 if (searchText == null) {
                                     searchText = "";

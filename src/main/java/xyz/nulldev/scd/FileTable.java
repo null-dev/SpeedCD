@@ -6,6 +6,7 @@ import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.screen.Screen;
 
 import java.io.File;
+import java.util.List;
 
 
 /**
@@ -30,9 +31,9 @@ public class FileTable {
     int lastColumnWithFiles;
     int maxFiles;
 
-    public static FileTable[] generateFileTables(File[] files, int columns, int rows) {
-        int extraFiles = files.length % rows;
-        int requiredColumns = (files.length - extraFiles) / rows;
+    public static FileTable[] generateFileTables(List<File> files, int columns, int rows) {
+        int extraFiles = files.size() % rows;
+        int requiredColumns = (files.size() - extraFiles) / rows;
         if (extraFiles > 0) requiredColumns++;
         int extraColumns = requiredColumns % columns;
         int requiredTables = (requiredColumns - extraColumns) / columns;
