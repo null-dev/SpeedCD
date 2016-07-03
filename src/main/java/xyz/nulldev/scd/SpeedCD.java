@@ -452,13 +452,6 @@ public class SpeedCD {
             }
             try {
                 screen.stopScreen();
-                //Even with stopScreen() the terminal's state is still not completely restored!
-                //We need to restore the STTY!
-
-                //Use hacky reflection since restoreSTTY is private
-                Method restoreSTTYMethod = terminal.getClass().getDeclaredMethod("restoreSTTY");
-                restoreSTTYMethod.setAccessible(true);
-                restoreSTTYMethod.invoke(terminal);
             } catch (IOException e) {
                 System.out.println("ERROR: Error cleaning up terminal!");
                 e.printStackTrace();
@@ -479,6 +472,22 @@ public class SpeedCD {
                     stream.print(wd.getAbsolutePath());
                 }
             } else {
+                try {
+                    //Even with stopScreen() the terminal's state is still not completely restored!
+                    //We need to restore the STTY!
+
+                    //Use hacky reflection since restoreSTTY is private
+                    Method restoreSTTYMethod = terminal.getClass().getDeclaredMethod("restoreSTTY");
+                    if(restoreSTTYMethod != null) {
+                        restoreSTTYMethod.setAccessible(true);
+                        restoreSTTYMethod.invoke(terminal);
+                    }
+                } catch (Exception e) {
+                    System.out.println("ERROR: Error cleaning up terminal!");
+                    e.printStackTrace();
+                    System.exit(-1);
+                    return;
+                }
                 //Invoke the shell if we are not in the same starting directory
                 if (!wd.equals(startingDirectory)) {
                     ProcessBuilder processBuilder = new ProcessBuilder(shell);
