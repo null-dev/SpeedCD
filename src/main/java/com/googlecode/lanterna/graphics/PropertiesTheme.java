@@ -14,12 +14,16 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.graphics;
 
 import com.googlecode.lanterna.SGR;
 import com.googlecode.lanterna.TextColor;
+import com.googlecode.lanterna.gui2.Component;
+import com.googlecode.lanterna.gui2.ComponentRenderer;
+import com.googlecode.lanterna.gui2.WindowDecorationRenderer;
+import com.googlecode.lanterna.gui2.WindowPostRenderer;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -27,29 +31,32 @@ import java.util.regex.Pattern;
 
 /**
  * This implementation of Theme reads its definitions from a {@code Properties} object.
+ * @deprecated Use {@link PropertyTheme} instead, is behaves more like you would expect
  * @author Martin
  */
+@Deprecated
 public final class PropertiesTheme implements Theme {
     private static final String STYLE_NORMAL = "";
     private static final String STYLE_PRELIGHT = "PRELIGHT";
     private static final String STYLE_SELECTED = "SELECTED";
     private static final String STYLE_ACTIVE = "ACTIVE";
     private static final String STYLE_INSENSITIVE = "INSENSITIVE";
-
     private static final Pattern STYLE_FORMAT = Pattern.compile("([a-zA-Z]+)(\\[([a-zA-Z0-9-_]+)\\])?");
-    private static final Pattern INDEXED_COLOR = Pattern.compile("#[0-9]{1,3}");
-    private static final Pattern RGB_COLOR = Pattern.compile("#[0-9a-fA-F]{6}");
 
     private final ThemeTreeNode rootNode;
+    private final WindowPostRenderer windowPostRenderer;
+    private final WindowDecorationRenderer windowDecorationRenderer;
 
     /**
      * Creates a new {@code PropertiesTheme} that is initialized by the properties value
      * @param properties Properties to initialize this theme with
      */
     public PropertiesTheme(Properties properties) {
-        rootNode = new ThemeTreeNode();
+        rootNode = new ThemeTreeNode(null);
         rootNode.foregroundMap.put(STYLE_NORMAL, TextColor.ANSI.WHITE);
         rootNode.backgroundMap.put(STYLE_NORMAL, TextColor.ANSI.BLACK);
+        windowPostRenderer = stringToClass(properties.getProperty("postrenderer", ""), WindowPostRenderer.class);
+        windowDecorationRenderer = stringToClass(properties.getProperty("windowdecoration", ""), WindowDecorationRenderer.class);
 
         for(String key: properties.stringPropertyNames()) {
             String definition = getDefinition(key);
@@ -72,7 +79,7 @@ public final class PropertiesTheme implements Theme {
             parentNode = rootNode;
         }
         if(!parentNode.childMap.containsKey(definition)) {
-            parentNode.childMap.put(definition, new ThemeTreeNode());
+            parentNode.childMap.put(definition, new ThemeTreeNode(parentNode));
         }
         return parentNode.childMap.get(definition);
     }
@@ -122,6 +129,30 @@ public final class PropertiesTheme implements Theme {
         return new DefinitionImpl(path);
     }
 
+    @Override
+    public WindowPostRenderer getWindowPostRenderer() {
+        return windowPostRenderer;
+    }
+
+    @Override
+    public WindowDecorationRenderer getWindowDecorationRenderer() {
+        return windowDecorationRenderer;
+    }
+
+    private static <T> T stringToClass(String className, Class<T> type) {
+        if(className == null || className.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return (T)Class.forName(className).newInstance();
+        } catch (InstantiationException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private class DefinitionImpl implements ThemeDefinition {
         final List<ThemeTreeNode> path;
@@ -185,8 +216,22 @@ public final class PropertiesTheme implements Theme {
         }
 
         @Override
-        public String getRenderer() {
-            return path.get(path.size() - 1).renderer;
+        public boolean isCursorVisible() {
+            return path.get(path.size() - 1).cursorVisible;
+        }
+
+        @Override
+        public boolean getBooleanProperty(String name, boolean defaultValue) {
+            String propertyValue = path.get(path.size() - 1).propertyMap.get(name);
+            if(propertyValue == null) {
+                return defaultValue;
+            }
+            return Boolean.parseBoolean(propertyValue);
+        }
+
+        @Override
+        public <T extends Component> ComponentRenderer<T> getRenderer(Class<T> type) {
+            return stringToClass(path.get(path.size() - 1).renderer, ComponentRenderer.class);
         }
     }
 
@@ -235,30 +280,36 @@ public final class PropertiesTheme implements Theme {
             while(iterator.hasPrevious()) {
                 ThemeTreeNode node = iterator.previous();
                 if(node.sgrMap.containsKey(name)) {
-                    return node.sgrMap.get(name);
+                    return EnumSet.copyOf(node.sgrMap.get(name));
                 }
             }
             if(!name.equals(STYLE_NORMAL)) {
-                return new StyleImpl(path, STYLE_NORMAL).getSGRs();
+                return EnumSet.copyOf(new StyleImpl(path, STYLE_NORMAL).getSGRs());
             }
             return EnumSet.noneOf(SGR.class);
         }
     }
 
     private static class ThemeTreeNode {
+        private final ThemeTreeNode parent;
         private final Map<String, ThemeTreeNode> childMap;
         private final Map<String, TextColor> foregroundMap;
         private final Map<String, TextColor> backgroundMap;
         private final Map<String, EnumSet<SGR>> sgrMap;
         private final Map<String, Character> characterMap;
+        private final Map<String, String> propertyMap;
+        private boolean cursorVisible;
         private String renderer;
 
-        private ThemeTreeNode() {
+        private ThemeTreeNode(ThemeTreeNode parent) {
+            this.parent = parent;
             childMap = new HashMap<String, ThemeTreeNode>();
             foregroundMap = new HashMap<String, TextColor>();
             backgroundMap = new HashMap<String, TextColor>();
             sgrMap = new HashMap<String, EnumSet<SGR>>();
             characterMap = new HashMap<String, Character>();
+            propertyMap = new HashMap<String, String>();
+            cursorVisible = true;
             renderer = null;
         }
 
@@ -280,10 +331,20 @@ public final class PropertiesTheme implements Theme {
                 sgrMap.put(getCategory(group), parseSGR(value));
             }
             else if(styleComponent.toLowerCase().trim().equals("char")) {
-                characterMap.put(getCategory(group), value.isEmpty() ? null : value.charAt(0));
+                characterMap.put(getCategory(group), value.isEmpty() ? ' ' : value.charAt(0));
+            }
+            else if(styleComponent.toLowerCase().trim().equals("cursor")) {
+                cursorVisible = Boolean.parseBoolean(value);
+            }
+            else if(styleComponent.toLowerCase().trim().equals("property")) {
+                propertyMap.put(getCategory(group), value.isEmpty() ? null : value.trim());
             }
             else if(styleComponent.toLowerCase().trim().equals("renderer")) {
                 renderer = value.trim().isEmpty() ? null : value.trim();
+            }
+            else if(styleComponent.toLowerCase().trim().equals("postrenderer") ||
+                    styleComponent.toLowerCase().trim().equals("windowdecoration")) {
+                // Don't do anything with this now, we might use it later
             }
             else {
                 throw new IllegalArgumentException("Unknown style component \"" + styleComponent + "\" in style \"" + style + "\"");
@@ -291,23 +352,7 @@ public final class PropertiesTheme implements Theme {
         }
 
         private TextColor parseValue(String value) {
-            value = value.trim();
-            if(RGB_COLOR.matcher(value).matches()) {
-                int r = Integer.parseInt(value.substring(1, 3), 16);
-                int g = Integer.parseInt(value.substring(3, 5), 16);
-                int b = Integer.parseInt(value.substring(5, 7), 16);
-                return new TextColor.RGB(r, g, b);
-            }
-            else if(INDEXED_COLOR.matcher(value).matches()) {
-                int index = Integer.parseInt(value.substring(1));
-                return new TextColor.Indexed(index);
-            }
-            try {
-                return TextColor.ANSI.valueOf(value.toUpperCase());
-            }
-            catch(IllegalArgumentException e) {
-                throw new IllegalArgumentException("Unknown color definition \"" + value + "\"", e);
-            }
+            return TextColor.Factory.fromString(value);
         }
 
         private EnumSet<SGR> parseSGR(String value) {

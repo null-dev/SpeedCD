@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.gui2;
 
@@ -43,7 +43,7 @@ public class ActionListBox extends AbstractListBox<Runnable, ActionListBox> {
      * Creates a new {@code ActionListBox} with a pre-set size. If the items don't fit in within this size, scrollbars
      * will be used to accommodate. Calling {@code new ActionListBox(null)} has the same effect as calling
      * {@code new ActionListBox()}.
-     * @param preferredSize
+     * @param preferredSize Preferred size of this {@link ActionListBox}
      */
     public ActionListBox(TerminalSize preferredSize) {
         super(preferredSize);

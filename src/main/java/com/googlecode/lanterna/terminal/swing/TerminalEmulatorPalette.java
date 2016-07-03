@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 
 package com.googlecode.lanterna.terminal.swing;
@@ -35,25 +35,25 @@ public class TerminalEmulatorPalette {
      */
     public static final TerminalEmulatorPalette GNOME_TERMINAL =
             new TerminalEmulatorPalette(
-                    new Color(211, 215, 207),
-                    new Color(238, 238, 236),
-                    new Color(46, 52, 54),
-                    new Color(46, 52, 54),
-                    new Color(85, 87, 83),
-                    new Color(204, 0, 0),
-                    new Color(239, 41, 41),
-                    new Color(78, 154, 6),
-                    new Color(138, 226, 52),
-                    new Color(196, 160, 0),
-                    new Color(252, 233, 79),
-                    new Color(52, 101, 164),
-                    new Color(114, 159, 207),
-                    new Color(117, 80, 123),
-                    new Color(173, 127, 168),
-                    new Color(6, 152, 154),
-                    new Color(52, 226, 226),
-                    new Color(211, 215, 207),
-                    new Color(238, 238, 236));
+                    new java.awt.Color(211, 215, 207),
+                    new java.awt.Color(238, 238, 236),
+                    new java.awt.Color(46, 52, 54),
+                    new java.awt.Color(46, 52, 54),
+                    new java.awt.Color(85, 87, 83),
+                    new java.awt.Color(204, 0, 0),
+                    new java.awt.Color(239, 41, 41),
+                    new java.awt.Color(78, 154, 6),
+                    new java.awt.Color(138, 226, 52),
+                    new java.awt.Color(196, 160, 0),
+                    new java.awt.Color(252, 233, 79),
+                    new java.awt.Color(52, 101, 164),
+                    new java.awt.Color(114, 159, 207),
+                    new java.awt.Color(117, 80, 123),
+                    new java.awt.Color(173, 127, 168),
+                    new java.awt.Color(6, 152, 154),
+                    new java.awt.Color(52, 226, 226),
+                    new java.awt.Color(211, 215, 207),
+                    new java.awt.Color(238, 238, 236));
 
     /**
      * Values taken from <a href="http://en.wikipedia.org/wiki/ANSI_escape_code">
@@ -61,25 +61,25 @@ public class TerminalEmulatorPalette {
      */
     public static final TerminalEmulatorPalette STANDARD_VGA =
             new TerminalEmulatorPalette(
-                    new Color(170, 170, 170),
-                    new Color(255, 255, 255),
-                    new Color(0, 0, 0),
-                    new Color(0, 0, 0),
-                    new Color(85, 85, 85),
-                    new Color(170, 0, 0),
-                    new Color(255, 85, 85),
-                    new Color(0, 170, 0),
-                    new Color(85, 255, 85),
-                    new Color(170, 85, 0),
-                    new Color(255, 255, 85),
-                    new Color(0, 0, 170),
-                    new Color(85, 85, 255),
-                    new Color(170, 0, 170),
-                    new Color(255, 85, 255),
-                    new Color(0, 170, 170),
-                    new Color(85, 255, 255),
-                    new Color(170, 170, 170),
-                    new Color(255, 255, 255));
+                    new java.awt.Color(170, 170, 170),
+                    new java.awt.Color(255, 255, 255),
+                    new java.awt.Color(0, 0, 0),
+                    new java.awt.Color(0, 0, 0),
+                    new java.awt.Color(85, 85, 85),
+                    new java.awt.Color(170, 0, 0),
+                    new java.awt.Color(255, 85, 85),
+                    new java.awt.Color(0, 170, 0),
+                    new java.awt.Color(85, 255, 85),
+                    new java.awt.Color(170, 85, 0),
+                    new java.awt.Color(255, 255, 85),
+                    new java.awt.Color(0, 0, 170),
+                    new java.awt.Color(85, 85, 255),
+                    new java.awt.Color(170, 0, 170),
+                    new java.awt.Color(255, 85, 255),
+                    new java.awt.Color(0, 170, 170),
+                    new java.awt.Color(85, 255, 255),
+                    new java.awt.Color(170, 170, 170),
+                    new java.awt.Color(255, 255, 255));
 
     /**
      * Values taken from <a href="http://en.wikipedia.org/wiki/ANSI_escape_code">
@@ -87,25 +87,25 @@ public class TerminalEmulatorPalette {
      */
     public static final TerminalEmulatorPalette WINDOWS_XP_COMMAND_PROMPT =
             new TerminalEmulatorPalette(
-                    new Color(192, 192, 192),
-                    new Color(255, 255, 255),
-                    new Color(0, 0, 0),
-                    new Color(0, 0, 0),
-                    new Color(128, 128, 128),
-                    new Color(128, 0, 0),
-                    new Color(255, 0, 0),
-                    new Color(0, 128, 0),
-                    new Color(0, 255, 0),
-                    new Color(128, 128, 0),
-                    new Color(255, 255, 0),
-                    new Color(0, 0, 128),
-                    new Color(0, 0, 255),
-                    new Color(128, 0, 128),
-                    new Color(255, 0, 255),
-                    new Color(0, 128, 128),
-                    new Color(0, 255, 255),
-                    new Color(192, 192, 192),
-                    new Color(255, 255, 255));
+                    new java.awt.Color(192, 192, 192),
+                    new java.awt.Color(255, 255, 255),
+                    new java.awt.Color(0, 0, 0),
+                    new java.awt.Color(0, 0, 0),
+                    new java.awt.Color(128, 128, 128),
+                    new java.awt.Color(128, 0, 0),
+                    new java.awt.Color(255, 0, 0),
+                    new java.awt.Color(0, 128, 0),
+                    new java.awt.Color(0, 255, 0),
+                    new java.awt.Color(128, 128, 0),
+                    new java.awt.Color(255, 255, 0),
+                    new java.awt.Color(0, 0, 128),
+                    new java.awt.Color(0, 0, 255),
+                    new java.awt.Color(128, 0, 128),
+                    new java.awt.Color(255, 0, 255),
+                    new java.awt.Color(0, 128, 128),
+                    new java.awt.Color(0, 255, 255),
+                    new java.awt.Color(192, 192, 192),
+                    new java.awt.Color(255, 255, 255));
 
     /**
      * Values taken from <a href="http://en.wikipedia.org/wiki/ANSI_escape_code">
@@ -113,25 +113,25 @@ public class TerminalEmulatorPalette {
      */
     public static final TerminalEmulatorPalette MAC_OS_X_TERMINAL_APP =
             new TerminalEmulatorPalette(
-                    new Color(203, 204, 205),
-                    new Color(233, 235, 235),
-                    new Color(0, 0, 0),
-                    new Color(0, 0, 0),
-                    new Color(129, 131, 131),
-                    new Color(194, 54, 33),
-                    new Color(252,57,31),
-                    new Color(37, 188, 36),
-                    new Color(49, 231, 34),
-                    new Color(173, 173, 39),
-                    new Color(234, 236, 35),
-                    new Color(73, 46, 225),
-                    new Color(88, 51, 255),
-                    new Color(211, 56, 211),
-                    new Color(249, 53, 248),
-                    new Color(51, 187, 200),
-                    new Color(20, 240, 240),
-                    new Color(203, 204, 205),
-                    new Color(233, 235, 235));
+                    new java.awt.Color(203, 204, 205),
+                    new java.awt.Color(233, 235, 235),
+                    new java.awt.Color(0, 0, 0),
+                    new java.awt.Color(0, 0, 0),
+                    new java.awt.Color(129, 131, 131),
+                    new java.awt.Color(194, 54, 33),
+                    new java.awt.Color(252,57,31),
+                    new java.awt.Color(37, 188, 36),
+                    new java.awt.Color(49, 231, 34),
+                    new java.awt.Color(173, 173, 39),
+                    new java.awt.Color(234, 236, 35),
+                    new java.awt.Color(73, 46, 225),
+                    new java.awt.Color(88, 51, 255),
+                    new java.awt.Color(211, 56, 211),
+                    new java.awt.Color(249, 53, 248),
+                    new java.awt.Color(51, 187, 200),
+                    new java.awt.Color(20, 240, 240),
+                    new java.awt.Color(203, 204, 205),
+                    new java.awt.Color(233, 235, 235));
 
     /**
      * Values taken from <a href="http://en.wikipedia.org/wiki/ANSI_escape_code">
@@ -139,25 +139,25 @@ public class TerminalEmulatorPalette {
      */
     public static final TerminalEmulatorPalette PUTTY =
             new TerminalEmulatorPalette(
-                    new Color(187, 187, 187),
-                    new Color(255, 255, 255),
-                    new Color(0, 0, 0),
-                    new Color(0, 0, 0),
-                    new Color(85, 85, 85),
-                    new Color(187, 0, 0),
-                    new Color(255, 85, 85),
-                    new Color(0, 187, 0),
-                    new Color(85, 255, 85),
-                    new Color(187, 187, 0),
-                    new Color(255, 255, 85),
-                    new Color(0, 0, 187),
-                    new Color(85, 85, 255),
-                    new Color(187, 0, 187),
-                    new Color(255, 85, 255),
-                    new Color(0, 187, 187),
-                    new Color(85, 255, 255),
-                    new Color(187, 187, 187),
-                    new Color(255, 255, 255));
+                    new java.awt.Color(187, 187, 187),
+                    new java.awt.Color(255, 255, 255),
+                    new java.awt.Color(0, 0, 0),
+                    new java.awt.Color(0, 0, 0),
+                    new java.awt.Color(85, 85, 85),
+                    new java.awt.Color(187, 0, 0),
+                    new java.awt.Color(255, 85, 85),
+                    new java.awt.Color(0, 187, 0),
+                    new java.awt.Color(85, 255, 85),
+                    new java.awt.Color(187, 187, 0),
+                    new java.awt.Color(255, 255, 85),
+                    new java.awt.Color(0, 0, 187),
+                    new java.awt.Color(85, 85, 255),
+                    new java.awt.Color(187, 0, 187),
+                    new java.awt.Color(255, 85, 255),
+                    new java.awt.Color(0, 187, 187),
+                    new java.awt.Color(85, 255, 255),
+                    new java.awt.Color(187, 187, 187),
+                    new java.awt.Color(255, 255, 255));
 
     /**
      * Values taken from <a href="http://en.wikipedia.org/wiki/ANSI_escape_code">
@@ -165,25 +165,25 @@ public class TerminalEmulatorPalette {
      */
     public static final TerminalEmulatorPalette XTERM =
             new TerminalEmulatorPalette(
-                    new Color(229, 229, 229),
-                    new Color(255, 255, 255),
-                    new Color(0, 0, 0),
-                    new Color(0, 0, 0),
-                    new Color(127, 127, 127),
-                    new Color(205, 0, 0),
-                    new Color(255, 0, 0),
-                    new Color(0, 205, 0),
-                    new Color(0, 255, 0),
-                    new Color(205, 205, 0),
-                    new Color(255, 255, 0),
-                    new Color(0, 0, 238),
-                    new Color(92, 92, 255),
-                    new Color(205, 0, 205),
-                    new Color(255, 0, 255),
-                    new Color(0, 205, 205),
-                    new Color(0, 255, 255),
-                    new Color(229, 229, 229),
-                    new Color(255, 255, 255));
+                    new java.awt.Color(229, 229, 229),
+                    new java.awt.Color(255, 255, 255),
+                    new java.awt.Color(0, 0, 0),
+                    new java.awt.Color(0, 0, 0),
+                    new java.awt.Color(127, 127, 127),
+                    new java.awt.Color(205, 0, 0),
+                    new java.awt.Color(255, 0, 0),
+                    new java.awt.Color(0, 205, 0),
+                    new java.awt.Color(0, 255, 0),
+                    new java.awt.Color(205, 205, 0),
+                    new java.awt.Color(255, 255, 0),
+                    new java.awt.Color(0, 0, 238),
+                    new java.awt.Color(92, 92, 255),
+                    new java.awt.Color(205, 0, 205),
+                    new java.awt.Color(255, 0, 255),
+                    new java.awt.Color(0, 205, 205),
+                    new java.awt.Color(0, 255, 255),
+                    new java.awt.Color(229, 229, 229),
+                    new java.awt.Color(255, 255, 255));
 
     /**
      * Default colors the SwingTerminal is using if you don't specify anything

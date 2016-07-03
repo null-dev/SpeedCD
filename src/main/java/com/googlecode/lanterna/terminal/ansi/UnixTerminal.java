@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.terminal.ansi;
 
@@ -33,10 +33,10 @@ import com.googlecode.lanterna.TerminalSize;
  * @author Martin
  */
 @SuppressWarnings("WeakerAccess")
-public class UnixTerminal extends UnixLikeTerminal {
+public class UnixTerminal extends UnixLikeTTYTerminal {
 
+    @Deprecated
     protected final UnixTerminalSizeQuerier terminalSizeQuerier;
-    private final boolean catchSpecialCharacters;
 
     /**
      * Creates a UnixTerminal with default settings, using System.in and System.out for input/output, using the default
@@ -54,13 +54,13 @@ public class UnixTerminal extends UnixLikeTerminal {
      * @param terminalInput Input stream to read terminal input from
      * @param terminalOutput Output stream to write terminal output to
      * @param terminalCharset Character set to use when converting characters to bytes
-     * @throws IOException If there was an I/O error initializing the terminal
+     * @throws java.io.IOException If there was an I/O error initializing the terminal
      */
     public UnixTerminal(
             InputStream terminalInput,
             OutputStream terminalOutput,
             Charset terminalCharset) throws IOException {
-        this(terminalInput, terminalOutput, terminalCharset, null);
+        this(terminalInput, terminalOutput, terminalCharset, CtrlCBehaviour.CTRL_C_KILLS_APPLICATION);
     }
 
     /**
@@ -73,9 +73,11 @@ public class UnixTerminal extends UnixLikeTerminal {
      * @param terminalCharset Character set to use when converting characters to bytes
      * @param customSizeQuerier Object to use for looking up the size of the terminal, or null to use the built-in
      * method
-     * @throws IOException If there was an I/O error initializing the terminal
+     * @throws java.io.IOException If there was an I/O error initializing the terminal
+     * @deprecated Use an overload that doesn't take a {@link UnixTerminalSizeQuerier}
      */
     @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
+    @Deprecated
     public UnixTerminal(
             InputStream terminalInput,
             OutputStream terminalOutput,
@@ -92,136 +94,75 @@ public class UnixTerminal extends UnixLikeTerminal {
      * @param terminalInput Input stream to read terminal input from
      * @param terminalOutput Output stream to write terminal output to
      * @param terminalCharset Character set to use when converting characters to bytes
-     * @param customSizeQuerier Object to use for looking up the size of the terminal, or null to use the built-in
-     * method
      * @param terminalCtrlCBehaviour Special settings on how the terminal will behave, see {@code UnixTerminalMode} for more
      * details
-     * @throws IOException If there was an I/O error initializing the terminal
+     * @throws java.io.IOException If there was an I/O error initializing the terminal
      */
     @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
     public UnixTerminal(
             InputStream terminalInput,
             OutputStream terminalOutput,
             Charset terminalCharset,
+            CtrlCBehaviour terminalCtrlCBehaviour) throws IOException {
+
+        this(terminalInput, terminalOutput, terminalCharset, null, terminalCtrlCBehaviour);
+    }
+
+    /**
+     * Creates a UnixTerminal using a specified input stream, output stream and character set, with a custom size
+     * querier instead of using the default one. This way you can override size detection (if you want to force the
+     * terminal to a fixed size, for example). You also choose how you want ctrl+c key strokes to be handled.
+     *
+     * @param terminalInput Input stream to read terminal input from
+     * @param terminalOutput Output stream to write terminal output to
+     * @param terminalCharset Character set to use when converting characters to bytes
+     * @param customSizeQuerier Object to use for looking up the size of the terminal, or null to use the built-in
+     * method
+     * @param terminalCtrlCBehaviour Special settings on how the terminal will behave, see {@code UnixTerminalMode} for more
+     * details
+     * @throws java.io.IOException If there was an I/O error initializing the terminal
+     * @deprecated Use an overload that doesn't take a {@link UnixTerminalSizeQuerier}
+     */
+    @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
+    @Deprecated
+    public UnixTerminal(
+            InputStream terminalInput,
+            OutputStream terminalOutput,
+            Charset terminalCharset,
             UnixTerminalSizeQuerier customSizeQuerier,
             CtrlCBehaviour terminalCtrlCBehaviour) throws IOException {
-        super(terminalInput,
+
+        this(new File("/dev/tty"),
+                terminalInput,
                 terminalOutput,
                 terminalCharset,
-                terminalCtrlCBehaviour,
-                new File("/dev/tty"));
+                customSizeQuerier,
+                terminalCtrlCBehaviour);
+    }
+
+    private UnixTerminal(
+            File terminalDevice,
+            InputStream terminalInput,
+            OutputStream terminalOutput,
+            Charset terminalCharset,
+            UnixTerminalSizeQuerier customSizeQuerier,
+            CtrlCBehaviour terminalCtrlCBehaviour) throws IOException {
+
+        super(terminalDevice,
+                terminalInput,
+                terminalOutput,
+                terminalCharset,
+                terminalCtrlCBehaviour);
 
         this.terminalSizeQuerier = customSizeQuerier;
-
-        //Make sure to set an initial size
-        onResized(80, 24);
-        
-        setupWinResizeHandler();
-        saveSTTY();
-        setCBreak(true);
-        setEcho(false);
-        sttyMinimum1CharacterForRead();
-        if("false".equals(System.getProperty("com.googlecode.lanterna.terminal.UnixTerminal.catchSpecialCharacters", "").trim().toLowerCase())) {
-            catchSpecialCharacters = false;
-        }
-        else {
-            catchSpecialCharacters = true;
-            disableSpecialCharacters();
-        }
-        setupShutdownHook();
     }
 
     @Override
-    public TerminalSize getTerminalSize() throws IOException {
+    public TerminalSize findTerminalSize() throws IOException {
         if(terminalSizeQuerier != null) {
             return terminalSizeQuerier.queryTerminalSize();
         }
         
-        return super.getTerminalSize();
+        return super.findTerminalSize();
     }
-
-    @Override
-    protected void sttyKeyEcho(final boolean enable) throws IOException {
-        exec(getSTTYCommand(), enable ? "echo" : "-echo");
-    }
-
-    @Override
-    protected void sttyMinimum1CharacterForRead() throws IOException {
-        exec(getSTTYCommand(), "min", "1");
-    }
-
-    @Override
-    protected void sttyICanon(final boolean enable) throws IOException {
-        exec(getSTTYCommand(), enable ? "icanon" : "-icanon");
-    }
-
-    @Override
-    protected String sttySave() throws IOException {
-        return exec(getSTTYCommand(), "-g").trim();
-    }
-
-    @Override
-    protected void sttyRestore(String tok) throws IOException {
-        exec(getSTTYCommand(), tok);
-    }
-
-    /*
-    //What was the problem with this one? I don't remember... Restoring ctrl+c for now (see below)
-    private void restoreEOFCtrlD() throws IOException {
-        exec(getShellCommand(), "-c", getSTTYCommand() + " eof ^d < /dev/tty");
-    }
-
-    private void disableSpecialCharacters() throws IOException {
-        exec(getShellCommand(), "-c", getSTTYCommand() + " intr undef < /dev/tty");
-        exec(getShellCommand(), "-c", getSTTYCommand() + " start undef < /dev/tty");
-        exec(getShellCommand(), "-c", getSTTYCommand() + " stop undef < /dev/tty");
-        exec(getShellCommand(), "-c", getSTTYCommand() + " susp undef < /dev/tty");
-    }
-
-    private void restoreSpecialCharacters() throws IOException {
-        exec(getShellCommand(), "-c", getSTTYCommand() + " intr ^C < /dev/tty");
-        exec(getShellCommand(), "-c", getSTTYCommand() + " start ^Q < /dev/tty");
-        exec(getShellCommand(), "-c", getSTTYCommand() + " stop ^S < /dev/tty");
-        exec(getShellCommand(), "-c", getSTTYCommand() + " susp ^Z < /dev/tty");
-    }
-    */
-
-
-    /**
-     * This method causes certain keystrokes (at the moment only ctrl+c) to be passed in to the program instead of
-     * interpreted by the shell and affect the program. For example, ctrl+c will send an interrupt that causes the
-     * JVM to shut down, but this method will make it pass in ctrl+c as a normal KeyStroke instead (you can still make
-     * ctrl+c kill the application, but Lanterna can do this for you after having restored the terminal).
-     * <p>
-     * Please note that this method is generally called automatically (i.e. it's turned on by default), unless you
-     * define a system property "com.googlecode.lanterna.terminal.UnixTerminal.catchSpecialCharacters" and set it to
-     * the string "false".
-     * @throws IOException If there was an I/O error when attempting to disable special characters
-     * @see com.googlecode.lanterna.terminal.ansi.UnixLikeTerminal.CtrlCBehaviour
-     */
-    public void disableSpecialCharacters() throws IOException {
-        exec(getSTTYCommand(), "intr", "undef");
-    }
-
-    /**
-     * This method restores the special characters disabled by {@code disableSpecialCharacters()}, if it has been
-     * called.
-     * @throws IOException If there was an I/O error when attempting to restore special characters
-     */
-    public void restoreSpecialCharacters() throws IOException {
-        exec(getSTTYCommand(), "intr", "^C");
-    }
-
-    @Override
-    protected synchronized void restoreSTTY() throws IOException {
-        super.restoreSTTY();
-        if(catchSpecialCharacters) {
-            restoreSpecialCharacters();
-        }
-    }
-
-    protected String getSTTYCommand() {
-        return "/bin/stty";
-    }
-
 }

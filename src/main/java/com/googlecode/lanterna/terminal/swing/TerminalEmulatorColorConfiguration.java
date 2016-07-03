@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.terminal.swing;
 
@@ -31,6 +31,7 @@ public class TerminalEmulatorColorConfiguration {
     /**
      * This is the default settings that is used when you create a new SwingTerminal without specifying any color
      * configuration. It will use classic VGA colors for the ANSI palette and bright colors on bold text.
+     * @return A terminal emulator color configuration object with values set to classic VGA palette
      */
     public static TerminalEmulatorColorConfiguration getDefault() {
         return newInstance(TerminalEmulatorPalette.STANDARD_VGA);

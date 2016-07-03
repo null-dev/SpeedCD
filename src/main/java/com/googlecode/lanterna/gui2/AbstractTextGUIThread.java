@@ -1,3 +1,21 @@
+/*
+ * This file is part of lanterna (http://code.google.com/p/lanterna/).
+ *
+ * lanterna is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Copyright (C) 2010-2016 Martin
+ */
 package com.googlecode.lanterna.gui2;
 
 import java.io.IOException;
@@ -6,7 +24,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
- * Created by martin on 20/06/15.
+ * Abstract implementation of {@link TextGUIThread} with common logic for both available concrete implementations.
  */
 public abstract class AbstractTextGUIThread implements TextGUIThread {
 
@@ -14,6 +32,10 @@ public abstract class AbstractTextGUIThread implements TextGUIThread {
     protected final Queue<Runnable> customTasks;
     protected ExceptionHandler exceptionHandler;
 
+    /**
+     * Sets up this {@link AbstractTextGUIThread} for operations on the supplies {@link TextGUI}
+     * @param textGUI Text GUI this {@link TextGUIThread} implementations will be operating on
+     */
     public AbstractTextGUIThread(TextGUI textGUI) {
         this.exceptionHandler = new ExceptionHandler() {
             @Override

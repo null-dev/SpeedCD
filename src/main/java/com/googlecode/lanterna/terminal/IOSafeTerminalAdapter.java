@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.terminal;
 
@@ -71,7 +71,7 @@ public class IOSafeTerminalAdapter implements IOSafeTerminal {
      * @return IOSafeTerminal wrapping the supplied terminal
      */
     public static IOSafeExtendedTerminal createRuntimeExceptionConvertingAdapter(ExtendedTerminal terminal) {
-        return new Extended(terminal, new ConvertToRuntimeException());
+        return new IOSafeTerminalAdapter.Extended(terminal, new ConvertToRuntimeException());
     }
     
     /**
@@ -96,7 +96,7 @@ public class IOSafeTerminalAdapter implements IOSafeTerminal {
      * @return IOSafeTerminal wrapping the supplied terminal
      */
     public static IOSafeExtendedTerminal createDoNothingOnExceptionAdapter(ExtendedTerminal terminal) {
-        return new Extended(terminal, new DoNothingAndOrReturnNull());
+        return new IOSafeTerminalAdapter.Extended(terminal, new DoNothingAndOrReturnNull());
     }
 
     private final Terminal backend;
@@ -190,8 +190,14 @@ public class IOSafeTerminalAdapter implements IOSafeTerminal {
     }
 
     @Override
-    public TextGraphics newTextGraphics() throws IOException {
-        return backend.newTextGraphics();
+    public TextGraphics newTextGraphics() {
+        try {
+            return backend.newTextGraphics();
+        }
+        catch(IOException e) {
+            exceptionHandler.onException(e);
+        }
+        return null;
     }
 
     @Override
@@ -245,12 +251,12 @@ public class IOSafeTerminalAdapter implements IOSafeTerminal {
     }
 
     @Override
-    public void addResizeListener(ResizeListener listener) {
+    public void addResizeListener(TerminalResizeListener listener) {
         backend.addResizeListener(listener);
     }
 
     @Override
-    public void removeResizeListener(ResizeListener listener) {
+    public void removeResizeListener(TerminalResizeListener listener) {
         backend.removeResizeListener(listener);
     }
 
@@ -274,6 +280,16 @@ public class IOSafeTerminalAdapter implements IOSafeTerminal {
             exceptionHandler.onException(e);
         }
         return null;
+    }
+
+    @Override
+    public void bell() {
+        try {
+            backend.bell();
+        }
+        catch(IOException e) {
+            exceptionHandler.onException(e);
+        }
     }
 
     @Override

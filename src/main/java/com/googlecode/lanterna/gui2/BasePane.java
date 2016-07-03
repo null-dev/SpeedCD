@@ -14,11 +14,12 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.gui2;
 
 import com.googlecode.lanterna.TerminalPosition;
+import com.googlecode.lanterna.graphics.Theme;
 import com.googlecode.lanterna.input.KeyStroke;
 
 /**
@@ -144,4 +145,20 @@ public interface BasePane extends Composite {
      * @param enableDirectionBasedMovements Should direction based focus movements be enabled?
      */
     void setEnableDirectionBasedMovements(boolean enableDirectionBasedMovements);
+
+    /**
+     * Returns the text GUI {@link Theme} associated with this base pane/window. This is either coming from the
+     * {@link TextGUI} this object is associated with, the theme set as the override through {@link #setTheme(Theme)}
+     * or {@code null} if this base pane/window isn't added to any {@link TextGUI} and doesn't have any override.
+     * @return The {@link Theme} this base pane/window is expected to use when drawing the contents
+     */
+    Theme getTheme();
+
+    /**
+     * Sets the override {@link Theme} to use for this base pane/window, rather than the default {@link Theme}
+     * associated with the {@link TextGUI} it is attached to. If called with {@code null}, it will clear the override
+     * and use the default value instead.
+     * @param theme {@link Theme} to assign to this base pane/window, or {@code null} to reset
+     */
+    void setTheme(Theme theme);
 }

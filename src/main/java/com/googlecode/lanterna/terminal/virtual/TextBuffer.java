@@ -1,4 +1,22 @@
-package com.googlecode.lanterna.terminal.swing;
+/*
+ * This file is part of lanterna (http://code.google.com/p/lanterna/).
+ *
+ * lanterna is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Copyright (C) 2010-2016 Martin
+ */
+package com.googlecode.lanterna.terminal.virtual;
 
 import com.googlecode.lanterna.TextCharacter;
 
@@ -8,7 +26,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 /**
- * This class is used to store lines of text inside of a terminal emulator. As used by {@link VirtualTerminal}, it keeps
+ * This class is used to store lines of text inside of a terminal emulator. As used by {@link DefaultVirtualTerminal}, it keeps
  * two {@link TextBuffer}s, one for private mode and one for normal mode and it can switch between them as needed.
  */
 class TextBuffer {

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.terminal;
 
@@ -33,23 +33,23 @@ import java.util.List;
  */
 public abstract class AbstractTerminal implements Terminal {
 
-    private final List<ResizeListener> resizeListeners;
+    private final List<TerminalResizeListener> resizeListeners;
     private TerminalSize lastKnownSize;
 
     protected AbstractTerminal() {
-        this.resizeListeners = new ArrayList<ResizeListener>();
+        this.resizeListeners = new ArrayList<TerminalResizeListener>();
         this.lastKnownSize = null;
     }
 
     @Override
-    public void addResizeListener(ResizeListener listener) {
+    public void addResizeListener(TerminalResizeListener listener) {
         if (listener != null) {
             resizeListeners.add(listener);
         }
     }
 
     @Override
-    public void removeResizeListener(ResizeListener listener) {
+    public void removeResizeListener(TerminalResizeListener listener) {
         if (listener != null) {
             resizeListeners.remove(listener);
         }
@@ -63,10 +63,19 @@ public abstract class AbstractTerminal implements Terminal {
      * @param rows Number of rows in the new size
      */
     protected synchronized void onResized(int columns, int rows) {
-        TerminalSize newSize = new TerminalSize(columns, rows);
+        onResized(new TerminalSize(columns, rows));
+    }
+
+    /**
+     * Call this method when the terminal has been resized or the initial size of the terminal has been discovered. It
+     * will trigger all resize listeners, but only if the size has changed from before.
+     *
+     * @param newSize Last discovered terminal size
+     */
+    protected synchronized void onResized(TerminalSize newSize) {
         if (lastKnownSize == null || !lastKnownSize.equals(newSize)) {
             lastKnownSize = newSize;
-            for (ResizeListener resizeListener : resizeListeners) {
+            for (TerminalResizeListener resizeListener : resizeListeners) {
                 resizeListener.onResized(this, lastKnownSize);
             }
         }

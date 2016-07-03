@@ -14,11 +14,10 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.gui2;
 
-import com.googlecode.lanterna.TextCharacter;
 import com.googlecode.lanterna.graphics.BasicTextImage;
 import com.googlecode.lanterna.graphics.TextImage;
 import com.googlecode.lanterna.input.KeyStroke;
@@ -72,8 +71,8 @@ public class MultiWindowTextGUI extends AbstractTextGUI implements WindowBasedTe
         this(guiThreadFactory,
                 screen,
                 new DefaultWindowManager(),
-                new WindowShadowRenderer(),
-                new EmptySpace(TextColor.ANSI.BLUE));
+                null,
+                new GUIBackdrop());
     }
 
     /**
@@ -105,7 +104,7 @@ public class MultiWindowTextGUI extends AbstractTextGUI implements WindowBasedTe
             WindowManager windowManager,
             Component background) {
 
-        this(screen, windowManager, new WindowShadowRenderer(), background);
+        this(screen, windowManager, null, background);
     }
 
     /**
@@ -236,7 +235,7 @@ public class MultiWindowTextGUI extends AbstractTextGUI implements WindowBasedTe
 
     @Override
     protected synchronized void drawGUI(TextGUIGraphics graphics) {
-        backgroundPane.draw(graphics);
+        drawBackgroundPane(graphics);
         getWindowManager().prepareWindows(this, Collections.unmodifiableList(windows), graphics.getSize());
         for(Window window: windows) {
             if (window.isVisible()) {
@@ -247,8 +246,7 @@ public class MultiWindowTextGUI extends AbstractTextGUI implements WindowBasedTe
                     textImage = new BasicTextImage(window.getDecoratedSize());
                     windowRenderBufferCache.put(window, textImage);
                 }
-                TextGUIGraphics windowGraphics = new TextGUIGraphics(this, textImage.newTextGraphics(), graphics.getTheme());
-
+                TextGUIGraphics windowGraphics = new TextGUIGraphics(this, textImage.newTextGraphics());
                 TerminalPosition contentOffset = TerminalPosition.TOP_LEFT_CORNER;
                 if (!window.getHints().contains(Window.Hint.NO_DECORATIONS)) {
                     WindowDecorationRenderer decorationRenderer = getWindowManager().getWindowDecorationRenderer(window);
@@ -262,14 +260,26 @@ public class MultiWindowTextGUI extends AbstractTextGUI implements WindowBasedTe
 
                 graphics.drawImage(window.getPosition(), textImage);
 
-                if (postRenderer != null && !window.getHints().contains(Window.Hint.NO_POST_RENDERING)) {
-                    postRenderer.postRender(graphics, this, window);
+                if(!window.getHints().contains(Window.Hint.NO_POST_RENDERING)) {
+                    if (window.getPostRenderer() != null) {
+                        window.getPostRenderer().postRender(graphics, this, window);
+                    }
+                    else if (postRenderer != null) {
+                        postRenderer.postRender(graphics, this, window);
+                    }
+                    else if (getTheme().getWindowPostRenderer() != null) {
+                        getTheme().getWindowPostRenderer().postRender(graphics, this, window);
+                    }
                 }
             }
         }
 
         // Purge the render buffer cache from windows that have been removed
         windowRenderBufferCache.keySet().retainAll(windows);
+    }
+
+    private void drawBackgroundPane(TextGUIGraphics graphics) {
+        backgroundPane.draw(new TextGUIGraphics(this, graphics));
     }
 
     @Override
@@ -415,6 +425,7 @@ public class MultiWindowTextGUI extends AbstractTextGUI implements WindowBasedTe
     @Override
     public synchronized MultiWindowTextGUI setActiveWindow(Window activeWindow) {
         this.activeWindow = activeWindow;
+        moveToTop(activeWindow);
         return this;
     }
 

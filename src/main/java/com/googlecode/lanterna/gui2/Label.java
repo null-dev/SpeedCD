@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.gui2;
 
@@ -239,7 +239,7 @@ public class Label extends AbstractComponent<Label> {
 
             @Override
             public void drawComponent(TextGUIGraphics graphics, Label component) {
-                ThemeDefinition themeDefinition = graphics.getThemeDefinition(Label.class);
+                ThemeDefinition themeDefinition = component.getThemeDefinition();
                 graphics.applyThemeStyle(themeDefinition.getNormal());
                 if(foregroundColor != null) {
                     graphics.setForegroundColor(foregroundColor);

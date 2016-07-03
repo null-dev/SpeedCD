@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.terminal.swing;
 
@@ -30,6 +30,7 @@ public class TerminalEmulatorDeviceConfiguration {
 
     /**
      * This is a static reference to the default terminal device configuration. Use this one if you are unsure.
+     * @return A terminal device configuration object with all settings set to default
      */
     public static TerminalEmulatorDeviceConfiguration getDefault() {
         return new TerminalEmulatorDeviceConfiguration();
@@ -86,7 +87,7 @@ public class TerminalEmulatorDeviceConfiguration {
     /**
      * Style the text cursor should take
      * @return Text cursor style
-     * @see CursorStyle
+     * @see TerminalEmulatorDeviceConfiguration.CursorStyle
      */
     public CursorStyle getCursorStyle() {
         return cursorStyle;

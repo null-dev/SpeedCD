@@ -14,10 +14,11 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.gui2;
 
+import com.googlecode.lanterna.Symbols;
 import com.googlecode.lanterna.TerminalTextUtils;
 import com.googlecode.lanterna.TerminalPosition;
 import com.googlecode.lanterna.TerminalSize;
@@ -116,7 +117,12 @@ public class Button extends AbstractInteractableComponent<Button> {
     public static class DefaultButtonRenderer implements ButtonRenderer {
         @Override
         public TerminalPosition getCursorLocation(Button button) {
-            return new TerminalPosition(1 + getLabelShift(button, button.getSize()), 0);
+            if(button.getThemeDefinition().isCursorVisible()) {
+                return new TerminalPosition(1 + getLabelShift(button, button.getSize()), 0);
+            }
+            else {
+                return null;
+            }
         }
 
         @Override
@@ -126,21 +132,22 @@ public class Button extends AbstractInteractableComponent<Button> {
 
         @Override
         public void drawComponent(TextGUIGraphics graphics, Button button) {
+            ThemeDefinition themeDefinition = button.getThemeDefinition();
             if(button.isFocused()) {
-                graphics.applyThemeStyle(getThemeDefinition(graphics).getActive());
+                graphics.applyThemeStyle(themeDefinition.getActive());
             }
             else {
-                graphics.applyThemeStyle(getThemeDefinition(graphics).getInsensitive());
+                graphics.applyThemeStyle(themeDefinition.getInsensitive());
             }
             graphics.fill(' ');
-            graphics.setCharacter(0, 0, getThemeDefinition(graphics).getCharacter("LEFT_BORDER", '<'));
-            graphics.setCharacter(graphics.getSize().getColumns() - 1, 0, getThemeDefinition(graphics).getCharacter("RIGHT_BORDER", '>'));
+            graphics.setCharacter(0, 0, themeDefinition.getCharacter("LEFT_BORDER", '<'));
+            graphics.setCharacter(graphics.getSize().getColumns() - 1, 0, themeDefinition.getCharacter("RIGHT_BORDER", '>'));
 
             if(button.isFocused()) {
-                graphics.applyThemeStyle(getThemeDefinition(graphics).getActive());
+                graphics.applyThemeStyle(themeDefinition.getActive());
             }
             else {
-                graphics.applyThemeStyle(getThemeDefinition(graphics).getPreLight());
+                graphics.applyThemeStyle(themeDefinition.getPreLight());
             }
             int labelShift = getLabelShift(button, graphics.getSize());
             graphics.setCharacter(1 + labelShift, 0, button.getLabel().charAt(0));
@@ -149,10 +156,10 @@ public class Button extends AbstractInteractableComponent<Button> {
                 return;
             }
             if(button.isFocused()) {
-                graphics.applyThemeStyle(getThemeDefinition(graphics).getSelected());
+                graphics.applyThemeStyle(themeDefinition.getSelected());
             }
             else {
-                graphics.applyThemeStyle(getThemeDefinition(graphics).getNormal());
+                graphics.applyThemeStyle(themeDefinition.getNormal());
             }
             graphics.putString(1 + labelShift + 1, 0, button.getLabel().substring(1));
         }
@@ -187,24 +194,62 @@ public class Button extends AbstractInteractableComponent<Button> {
 
         @Override
         public void drawComponent(TextGUIGraphics graphics, Button button) {
+            ThemeDefinition themeDefinition = button.getThemeDefinition();
             if(button.isFocused()) {
-                graphics.applyThemeStyle(getThemeDefinition(graphics).getActive());
+                graphics.applyThemeStyle(themeDefinition.getActive());
             }
             else {
-                graphics.applyThemeStyle(getThemeDefinition(graphics).getInsensitive());
+                graphics.applyThemeStyle(themeDefinition.getInsensitive());
             }
             graphics.fill(' ');
             if(button.isFocused()) {
-                graphics.applyThemeStyle(getThemeDefinition(graphics).getSelected());
+                graphics.applyThemeStyle(themeDefinition.getSelected());
             }
             else {
-                graphics.applyThemeStyle(getThemeDefinition(graphics).getNormal());
+                graphics.applyThemeStyle(themeDefinition.getNormal());
             }
             graphics.putString(0, 0, button.getLabel());
         }
     }
 
-    private static ThemeDefinition getThemeDefinition(TextGUIGraphics graphics) {
-        return graphics.getThemeDefinition(Button.class);
+    public static class BorderedButtonRenderer implements ButtonRenderer {
+        @Override
+        public TerminalPosition getCursorLocation(Button component) {
+            return null;
+        }
+
+        @Override
+        public TerminalSize getPreferredSize(Button component) {
+            return new TerminalSize(TerminalTextUtils.getColumnWidth(component.getLabel()) + 5, 4);
+        }
+
+        @Override
+        public void drawComponent(TextGUIGraphics graphics, Button button) {
+            ThemeDefinition themeDefinition = button.getThemeDefinition();
+            graphics.applyThemeStyle(themeDefinition.getNormal());
+            TerminalSize size = graphics.getSize();
+            graphics.drawLine(1, 0, size.getColumns() - 3, 0, Symbols.SINGLE_LINE_HORIZONTAL);
+            graphics.drawLine(1, size.getRows() - 2, size.getColumns() - 3, size.getRows() - 2, Symbols.SINGLE_LINE_HORIZONTAL);
+            graphics.drawLine(0, 1, 0, size.getRows() - 3, Symbols.SINGLE_LINE_VERTICAL);
+            graphics.drawLine(size.getColumns() - 2, 1, size.getColumns() - 2, size.getRows() - 3, Symbols.SINGLE_LINE_VERTICAL);
+            graphics.setCharacter(0, 0, Symbols.SINGLE_LINE_TOP_LEFT_CORNER);
+            graphics.setCharacter(size.getColumns() - 2, 0, Symbols.SINGLE_LINE_TOP_RIGHT_CORNER);
+            graphics.setCharacter(size.getColumns() - 2, size.getRows() - 2, Symbols.SINGLE_LINE_BOTTOM_RIGHT_CORNER);
+            graphics.setCharacter(0, size.getRows() - 2, Symbols.SINGLE_LINE_BOTTOM_LEFT_CORNER);
+
+            // Fill the inner part of the box
+            graphics.drawLine(1, 1, size.getColumns() - 3, 1, ' ');
+
+            // Draw the text inside the button
+            if(button.isFocused()) {
+                graphics.applyThemeStyle(themeDefinition.getActive());
+            }
+            graphics.putString(2, 1, TerminalTextUtils.fitString(button.getLabel(), size.getColumns() - 5));
+
+            // Draw the shadow
+            graphics.applyThemeStyle(themeDefinition.getInsensitive());
+            graphics.drawLine(1, size.getRows() - 1, size.getColumns() - 1, size.getRows() - 1, ' ');
+            graphics.drawLine(size.getColumns() - 1, 1, size.getColumns() - 1, size.getRows() - 2, ' ');
+        }
     }
 }

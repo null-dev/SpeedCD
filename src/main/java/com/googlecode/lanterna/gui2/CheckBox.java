@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.gui2;
 
@@ -175,7 +175,12 @@ public class CheckBox extends AbstractInteractableComponent<CheckBox> {
         private static final TerminalPosition CURSOR_LOCATION = new TerminalPosition(1, 0);
         @Override
         public TerminalPosition getCursorLocation(CheckBox component) {
-            return CURSOR_LOCATION;
+            if(component.getThemeDefinition().isCursorVisible()) {
+                return CURSOR_LOCATION;
+            }
+            else {
+                return null;
+            }
         }
 
         @Override
@@ -189,7 +194,7 @@ public class CheckBox extends AbstractInteractableComponent<CheckBox> {
 
         @Override
         public void drawComponent(TextGUIGraphics graphics, CheckBox component) {
-            ThemeDefinition themeDefinition = graphics.getThemeDefinition(CheckBox.class);
+            ThemeDefinition themeDefinition = component.getThemeDefinition();
             if(component.isFocused()) {
                 graphics.applyThemeStyle(themeDefinition.getActive());
             }
@@ -200,14 +205,23 @@ public class CheckBox extends AbstractInteractableComponent<CheckBox> {
             graphics.fill(' ');
             graphics.putString(4, 0, component.label);
 
-            String head = "[" + (component.isChecked() ? themeDefinition.getCharacter("MARKER", 'x') : " ") + "]";
             if(component.isFocused()) {
                 graphics.applyThemeStyle(themeDefinition.getPreLight());
             }
             else {
+                graphics.applyThemeStyle(themeDefinition.getInsensitive());
+            }
+            graphics.setCharacter(0, 0, themeDefinition.getCharacter("LEFT_BRACKET", '['));
+            graphics.setCharacter(2, 0, themeDefinition.getCharacter("RIGHT_BRACKET", ']'));
+            graphics.setCharacter(3, 0, ' ');
+
+            if(component.isFocused()) {
+                graphics.applyThemeStyle(themeDefinition.getSelected());
+            }
+            else {
                 graphics.applyThemeStyle(themeDefinition.getNormal());
             }
-            graphics.putString(0, 0, head);
+            graphics.setCharacter(1, 0, (component.isChecked() ? themeDefinition.getCharacter("MARKER", 'x') : ' '));
         }
     }
 }

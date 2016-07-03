@@ -14,14 +14,14 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.gui2;
 
 import com.googlecode.lanterna.TerminalTextUtils;
-import com.googlecode.lanterna.Symbols;
 import com.googlecode.lanterna.TerminalPosition;
 import com.googlecode.lanterna.TerminalSize;
+import com.googlecode.lanterna.graphics.ThemeDefinition;
 import com.googlecode.lanterna.input.KeyStroke;
 
 import java.util.ArrayList;
@@ -200,6 +200,15 @@ public abstract class AbstractListBox<V, T extends AbstractListBox<V, T>> extend
         return self();
     }
 
+    @Override
+    public boolean isFocusable() {
+        if(isEmpty()) {
+            // These dialog boxes are quite weird when they are empty and receive input focus, so try to avoid that
+            return false;
+        }
+        return super.isFocusable();
+    }
+
     /**
      * Looks for the particular item in the list and returns the index within the list (starting from zero) of that item
      * if it is found, or -1 otherwise
@@ -294,17 +303,22 @@ public abstract class AbstractListBox<V, T extends AbstractListBox<V, T>> extend
      * @param <T> Type of list box
      */
     public static class DefaultListBoxRenderer<V, T extends AbstractListBox<V, T>> implements InteractableRenderer<T> {
+        private final ScrollBar verticalScrollBar;
         private int scrollTopIndex;
 
         /**
          * Default constructor
          */
         public DefaultListBoxRenderer() {
+            this.verticalScrollBar = new ScrollBar(Direction.VERTICAL);
             this.scrollTopIndex = 0;
         }
 
         @Override
         public TerminalPosition getCursorLocation(T listBox) {
+            if(!listBox.getThemeDefinition().isCursorVisible()) {
+                return null;
+            }
             int selectedIndex = listBox.getSelectedIndex();
             int columnAccordingToRenderer = listBox.getListItemRenderer().getHotSpotPositionOnLine(selectedIndex);
             if(columnAccordingToRenderer == -1) {
@@ -330,6 +344,7 @@ public abstract class AbstractListBox<V, T extends AbstractListBox<V, T>> extend
         @Override
         public void drawComponent(TextGUIGraphics graphics, T listBox) {
             //update the page size, used for page up and page down keys
+            ThemeDefinition themeDefinition = listBox.getTheme().getDefinition(AbstractListBox.class);
             int componentHeight = graphics.getSize().getRows();
             int componentWidth = graphics.getSize().getColumns();
             int selectedIndex = listBox.getSelectedIndex();
@@ -351,7 +366,7 @@ public abstract class AbstractListBox<V, T extends AbstractListBox<V, T>> extend
                 scrollTopIndex = items.size() - componentHeight;
             }
 
-            graphics.applyThemeStyle(graphics.getThemeDefinition(AbstractListBox.class).getNormal());
+            graphics.applyThemeStyle(themeDefinition.getNormal());
             graphics.fill(' ');
 
             TerminalSize itemSize = graphics.getSize().withRows(1);
@@ -368,23 +383,32 @@ public abstract class AbstractListBox<V, T extends AbstractListBox<V, T>> extend
                         listBox.isFocused());
             }
 
-            graphics.applyThemeStyle(graphics.getThemeDefinition(AbstractListBox.class).getNormal());
+            graphics.applyThemeStyle(themeDefinition.getNormal());
             if(items.size() > componentHeight) {
+                verticalScrollBar.onAdded(listBox.getParent());
+                verticalScrollBar.setViewSize(componentHeight);
+                verticalScrollBar.setScrollMaximum(items.size());
+                verticalScrollBar.setScrollPosition(scrollTopIndex);
+                verticalScrollBar.draw(graphics.newTextGraphics(
+                        new TerminalPosition(graphics.getSize().getColumns() - 1, 0),
+                        new TerminalSize(1, graphics.getSize().getRows())));
+                /*
                 graphics.putString(componentWidth - 1, 0, Symbols.ARROW_UP + "");
 
-                graphics.applyThemeStyle(graphics.getThemeDefinition(AbstractListBox.class).getInsensitive());
+                graphics.applyThemeStyle(themeDefinition.getInsensitive());
                 for(int i = 1; i < componentHeight - 1; i++)
                     graphics.putString(componentWidth - 1, i, Symbols.BLOCK_MIDDLE + "");
 
-                graphics.applyThemeStyle(graphics.getThemeDefinition(AbstractListBox.class).getNormal());
+                graphics.applyThemeStyle(themeDefinition.getNormal());
                 graphics.putString(componentWidth - 1, componentHeight - 1, Symbols.ARROW_DOWN + "");
 
                 //Finally print the 'tick'
                 int scrollableSize = items.size() - componentHeight;
                 double position = (double)scrollTopIndex / ((double)scrollableSize);
                 int tickPosition = (int)(((double) componentHeight - 3.0) * position);
-                graphics.applyThemeStyle(graphics.getThemeDefinition(AbstractListBox.class).getInsensitive());
+                graphics.applyThemeStyle(themeDefinition.getInsensitive());
                 graphics.putString(componentWidth - 1, 1 + tickPosition, " ");
+                */
             }
         }
     }
@@ -434,14 +458,18 @@ public abstract class AbstractListBox<V, T extends AbstractListBox<V, T>> extend
          * @param focused Will be set to {@code true} if the list box currently has input focus, otherwise {@code false}
          */
         public void drawItem(TextGUIGraphics graphics, T listBox, int index, V item, boolean selected, boolean focused) {
+            ThemeDefinition themeDefinition = listBox.getTheme().getDefinition(AbstractListBox.class);
             if(selected && focused) {
-                graphics.applyThemeStyle(graphics.getThemeDefinition(AbstractListBox.class).getSelected());
+                graphics.applyThemeStyle(themeDefinition.getSelected());
             }
             else {
-                graphics.applyThemeStyle(graphics.getThemeDefinition(AbstractListBox.class).getNormal());
+                graphics.applyThemeStyle(themeDefinition.getNormal());
             }
             String label = getLabel(listBox, index, item);
             label = TerminalTextUtils.fitString(label, graphics.getSize().getColumns());
+            while(TerminalTextUtils.getColumnWidth(label) < graphics.getSize().getColumns()) {
+                label += " ";
+            }
             graphics.putString(0, 0, label);
         }
     }

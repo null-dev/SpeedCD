@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.graphics;
 
@@ -63,7 +63,7 @@ public interface TextGraphics {
      * @param size How large area, counted from the topLeftCorner, the new TextGraphics can write to. This cannot be
      *             larger than the current TextGraphics's writable area (adjusted by topLeftCorner)
      * @return A new TextGraphics with the same underlying subsystem, that can write to only the specified area
-     * @throws IllegalArgumentException If the size the of new TextGraphics exceeds the dimensions of this
+     * @throws java.lang.IllegalArgumentException If the size the of new TextGraphics exceeds the dimensions of this
      * TextGraphics in any way.
      */
     TextGraphics newTextGraphics(TerminalPosition topLeftCorner, TerminalSize size) throws IllegalArgumentException;
@@ -138,12 +138,14 @@ public interface TextGraphics {
     /**
      * Sets the behaviour to use when expanding tab characters (\t) to spaces
      * @param tabBehaviour Behaviour to use when expanding tabs to spaces
+     * @return Itself
      */
     TextGraphics setTabBehaviour(TabBehaviour tabBehaviour);
 
     /**
      * Fills the entire writable area with a single character, using current foreground color, background color and modifiers.
      * @param c Character to fill the writable area with
+     * @return Itself
      */
     TextGraphics fill(char c);
 
@@ -237,6 +239,7 @@ public interface TextGraphics {
      * @param p2 Second point on the screen of the triangle
      * @param p3 Third point on the screen of the triangle
      * @param character What character to use when drawing the lines of the triangle
+     * @return Itself
      */
     TextGraphics drawTriangle(TerminalPosition p1, TerminalPosition p2, TerminalPosition p3, char character);
 
@@ -248,6 +251,7 @@ public interface TextGraphics {
      * @param p2 Second point on the screen of the triangle
      * @param p3 Third point on the screen of the triangle
      * @param character What character data to use when drawing the lines of the triangle
+     * @return Itself
      */
     TextGraphics drawTriangle(TerminalPosition p1, TerminalPosition p2, TerminalPosition p3, TextCharacter character);
 
@@ -259,6 +263,7 @@ public interface TextGraphics {
      * @param p2 Second point on the screen of the triangle
      * @param p3 Third point on the screen of the triangle
      * @param character What character to use when drawing the triangle
+     * @return Itself
      */
     TextGraphics fillTriangle(TerminalPosition p1, TerminalPosition p2, TerminalPosition p3, char character);
 
@@ -270,6 +275,7 @@ public interface TextGraphics {
      * @param p2 Second point on the screen of the triangle
      * @param p3 Third point on the screen of the triangle
      * @param character What character data to use when drawing the triangle
+     * @return Itself
      */
     TextGraphics fillTriangle(TerminalPosition p1, TerminalPosition p2, TerminalPosition p3, TextCharacter character);
 
@@ -284,6 +290,7 @@ public interface TextGraphics {
      * @param topLeft Coordinates of the top-left position of the rectangle
      * @param size Size (in columns and rows) of the area to draw
      * @param character What character to use when drawing the outline of the rectangle
+     * @return Itself
      */
     TextGraphics drawRectangle(TerminalPosition topLeft, TerminalSize size, char character);
 
@@ -298,6 +305,7 @@ public interface TextGraphics {
      * @param topLeft Coordinates of the top-left position of the rectangle
      * @param size Size (in columns and rows) of the area to draw
      * @param character What character data to use when drawing the outline of the rectangle
+     * @return Itself
      */
     TextGraphics drawRectangle(TerminalPosition topLeft, TerminalSize size, TextCharacter character);
 
@@ -312,6 +320,7 @@ public interface TextGraphics {
      * @param topLeft Coordinates of the top-left position of the rectangle
      * @param size Size (in columns and rows) of the area to draw
      * @param character What character to use when filling the rectangle
+     * @return Itself
      */
     TextGraphics fillRectangle(TerminalPosition topLeft, TerminalSize size, char character);
 
@@ -326,6 +335,7 @@ public interface TextGraphics {
      * @param topLeft Coordinates of the top-left position of the rectangle
      * @param size Size (in columns and rows) of the area to draw
      * @param character What character data to use when filling the rectangle
+     * @return Itself
      */
     TextGraphics fillRectangle(TerminalPosition topLeft, TerminalSize size, TextCharacter character);
     
@@ -351,8 +361,7 @@ public interface TextGraphics {
      *                        position
      * @return Itself
      */
-    TextGraphics drawImage(TerminalPosition topLeft, TextImage image, TerminalPosition sourceImageTopLeft,
-                           TerminalSize sourceImageSize);
+    TextGraphics drawImage(TerminalPosition topLeft, TextImage image, TerminalPosition sourceImageTopLeft, TerminalSize sourceImageSize);
 
     /**
      * Puts a string on the screen at the specified position with the current colors and modifiers. If the string

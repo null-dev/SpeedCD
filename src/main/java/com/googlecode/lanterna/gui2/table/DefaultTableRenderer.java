@@ -1,6 +1,26 @@
+/*
+ * This file is part of lanterna (http://code.google.com/p/lanterna/).
+ *
+ * lanterna is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Copyright (C) 2010-2016 Martin
+ */
 package com.googlecode.lanterna.gui2.table;
 
 import com.googlecode.lanterna.*;
+import com.googlecode.lanterna.graphics.Theme;
+import com.googlecode.lanterna.graphics.ThemeDefinition;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.ScrollBar;
 import com.googlecode.lanterna.gui2.TextGUIGraphics;
@@ -25,8 +45,8 @@ public class DefaultTableRenderer<V> implements TableRenderer<V> {
 
     //So that we don't have to recalculate the size every time. This still isn't optimal but shouganai.
     private TerminalSize cachedSize;
-    private List<Integer> columnSizes;
-    private List<Integer> rowSizes;
+    private final List<Integer> columnSizes;
+    private final List<Integer> rowSizes;
     private int headerSizeInRows;
 
     /**
@@ -122,6 +142,22 @@ public class DefaultTableRenderer<V> implements TableRenderer<V> {
 
         if(tableModel.getColumnCount() == 0) {
             return TerminalSize.ZERO;
+        }
+
+        // If there are no rows, base the column sizes off of the column labels
+        if(rows.size() == 0) {
+            for(int columnIndex = viewLeftColumn; columnIndex < viewLeftColumn + visibleColumns; columnIndex++) {
+                int columnSize = tableHeaderRenderer.getPreferredSize(table, columnHeaders.get(columnIndex), columnIndex).getColumns();
+                int listOffset = columnIndex - viewLeftColumn;
+                if(columnSizes.size() == listOffset) {
+                    columnSizes.add(columnSize);
+                }
+                else {
+                    if(columnSizes.get(listOffset) < columnSize) {
+                        columnSizes.set(listOffset, columnSize);
+                    }
+                }
+            }
         }
 
         for(int rowIndex = 0; rowIndex < rows.size(); rowIndex++) {
@@ -232,11 +268,15 @@ public class DefaultTableRenderer<V> implements TableRenderer<V> {
             return;
         }
 
+        // Get preferred size if the table model has changed
+        if(table.isInvalid()) getPreferredSize(table);
+
         int topPosition = drawHeader(graphics, table);
         drawRows(graphics, table, topPosition);
     }
 
     private int drawHeader(TextGUIGraphics graphics, Table<V> table) {
+        Theme theme = table.getTheme();
         TableHeaderRenderer<V> tableHeaderRenderer = table.getTableHeaderRenderer();
         List<String> headers = table.getTableModel().getColumnLabels();
         int viewLeftColumn = table.getViewLeftColumn();
@@ -253,7 +293,7 @@ public class DefaultTableRenderer<V> implements TableRenderer<V> {
             tableHeaderRenderer.drawHeader(table, label, index, graphics.newTextGraphics(new TerminalPosition(leftPosition, 0), size));
             leftPosition += size.getColumns();
             if(headerHorizontalBorderStyle != TableCellBorderStyle.None && index < (endColumnIndex - 1)) {
-                graphics.applyThemeStyle(graphics.getThemeDefinition(Table.class).getNormal());
+                graphics.applyThemeStyle(theme.getDefinition(Table.class).getNormal());
                 graphics.setCharacter(leftPosition, 0, getVerticalCharacter(headerHorizontalBorderStyle));
                 leftPosition++;
             }
@@ -262,7 +302,7 @@ public class DefaultTableRenderer<V> implements TableRenderer<V> {
 
         if(headerVerticalBorderStyle != TableCellBorderStyle.None) {
             leftPosition = 0;
-            graphics.applyThemeStyle(graphics.getThemeDefinition(Table.class).getNormal());
+            graphics.applyThemeStyle(theme.getDefinition(Table.class).getNormal());
             for(int i = 0; i < columnSizes.size(); i++) {
                 if(i > 0) {
                     graphics.setCharacter(
@@ -288,6 +328,8 @@ public class DefaultTableRenderer<V> implements TableRenderer<V> {
     }
 
     private void drawRows(TextGUIGraphics graphics, Table<V> table, int topPosition) {
+        Theme theme = table.getTheme();
+        ThemeDefinition themeDefinition = theme.getDefinition(Table.class);
         TerminalSize area = graphics.getSize();
         TableCellRenderer<V> tableCellRenderer = table.getTableCellRenderer();
         TableModel<V> tableModel = table.getTableModel();
@@ -338,14 +380,14 @@ public class DefaultTableRenderer<V> implements TableRenderer<V> {
                 if(columnIndex > viewLeftColumn) {
                     if(table.getSelectedRow() == rowIndex && !table.isCellSelection()) {
                         if(table.isFocused()) {
-                            graphics.applyThemeStyle(graphics.getThemeDefinition(Table.class).getActive());
+                            graphics.applyThemeStyle(themeDefinition.getActive());
                         }
                         else {
-                            graphics.applyThemeStyle(graphics.getThemeDefinition(Table.class).getSelected());
+                            graphics.applyThemeStyle(themeDefinition.getSelected());
                         }
                     }
                     else {
-                        graphics.applyThemeStyle(graphics.getThemeDefinition(Table.class).getNormal());
+                        graphics.applyThemeStyle(themeDefinition.getNormal());
                     }
                     graphics.setCharacter(leftPosition, topPosition, getVerticalCharacter(cellHorizontalBorderStyle));
                     leftPosition++;
@@ -362,7 +404,7 @@ public class DefaultTableRenderer<V> implements TableRenderer<V> {
             topPosition += rowSizes.get(rowIndex - viewTopRow);
             if(cellVerticalBorderStyle != TableCellBorderStyle.None) {
                 leftPosition = 0;
-                graphics.applyThemeStyle(graphics.getThemeDefinition(Table.class).getNormal());
+                graphics.applyThemeStyle(themeDefinition.getNormal());
                 for(int i = 0; i < columnSizes.size(); i++) {
                     if(i > 0) {
                         graphics.setCharacter(

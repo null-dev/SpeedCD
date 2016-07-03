@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.terminal.swing;
 
@@ -24,12 +24,15 @@ import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 import com.googlecode.lanterna.terminal.IOSafeTerminal;
-import com.googlecode.lanterna.terminal.ResizeListener;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextColor;
+import com.googlecode.lanterna.terminal.TerminalResizeListener;
 
 import java.awt.*;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.swing.*;
 
@@ -43,41 +46,26 @@ import javax.swing.*;
 @SuppressWarnings("serial")
 public class SwingTerminalFrame extends JFrame implements IOSafeTerminal {
     private final SwingTerminal swingTerminal;
-    private TerminalEmulatorAutoCloseTrigger autoCloseTrigger;
+    private final EnumSet<TerminalEmulatorAutoCloseTrigger> autoCloseTriggers;
     private boolean disposed;
 
     /**
-     * Creates a new SwingTerminalFrame that doesn't automatically close.
-     */
-    public SwingTerminalFrame() throws HeadlessException {
-        this(TerminalEmulatorAutoCloseTrigger.DoNotAutoClose);
-    }
-
-    /**
-     * Creates a new SwingTerminalFrame with a specified auto-close behaviour
-     * @param autoCloseTrigger What to trigger automatic disposal of the JFrame
+     * Creates a new SwingTerminalFrame with an optional list of auto-close triggers
+     * @param autoCloseTriggers What to trigger automatic disposal of the JFrame
      */
     @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
-    public SwingTerminalFrame(TerminalEmulatorAutoCloseTrigger autoCloseTrigger) {
-        this("SwingTerminalFrame", autoCloseTrigger);
+    public SwingTerminalFrame(TerminalEmulatorAutoCloseTrigger... autoCloseTriggers) {
+        this("SwingTerminalFrame", autoCloseTriggers);
     }
 
     /**
-     * Creates a new SwingTerminalFrame with a given title and no automatic closing.
+     * Creates a new SwingTerminalFrame with a specific title and an optional list of auto-close triggers
      * @param title Title to use for the window
-     */
-    public SwingTerminalFrame(String title) throws HeadlessException {
-        this(title, TerminalEmulatorAutoCloseTrigger.DoNotAutoClose);
-    }
-
-    /**
-     * Creates a new SwingTerminalFrame with a specified auto-close behaviour and specific title
-     * @param title Title to use for the window
-     * @param autoCloseTrigger What to trigger automatic disposal of the JFrame
+     * @param autoCloseTriggers What to trigger automatic disposal of the JFrame
      */
     @SuppressWarnings("WeakerAccess")
-    public SwingTerminalFrame(String title, TerminalEmulatorAutoCloseTrigger autoCloseTrigger) throws HeadlessException {
-        this(title, new SwingTerminal(), autoCloseTrigger);
+    public SwingTerminalFrame(String title, TerminalEmulatorAutoCloseTrigger... autoCloseTriggers) throws HeadlessException {
+        this(title, new SwingTerminal(), autoCloseTriggers);
     }
 
     /**
@@ -86,28 +74,14 @@ public class SwingTerminalFrame extends JFrame implements IOSafeTerminal {
      * @param deviceConfiguration Device configuration for the embedded SwingTerminal
      * @param fontConfiguration Font configuration for the embedded SwingTerminal
      * @param colorConfiguration Color configuration for the embedded SwingTerminal
-     */
-    public SwingTerminalFrame(String title,
-            TerminalEmulatorDeviceConfiguration deviceConfiguration,
-            SwingTerminalFontConfiguration fontConfiguration,
-            TerminalEmulatorColorConfiguration colorConfiguration) {
-        this(title, deviceConfiguration, fontConfiguration, colorConfiguration, TerminalEmulatorAutoCloseTrigger.DoNotAutoClose);
-    }
-
-    /**
-     * Creates a new SwingTerminalFrame using a specified title and a series of swing terminal configuration objects
-     * @param title What title to use for the window
-     * @param deviceConfiguration Device configuration for the embedded SwingTerminal
-     * @param fontConfiguration Font configuration for the embedded SwingTerminal
-     * @param colorConfiguration Color configuration for the embedded SwingTerminal
-     * @param autoCloseTrigger What to trigger automatic disposal of the JFrame
+     * @param autoCloseTriggers What to trigger automatic disposal of the JFrame
      */
     public SwingTerminalFrame(String title,
             TerminalEmulatorDeviceConfiguration deviceConfiguration,
             SwingTerminalFontConfiguration fontConfiguration,
             TerminalEmulatorColorConfiguration colorConfiguration,
-            TerminalEmulatorAutoCloseTrigger autoCloseTrigger) {
-        this(title, null, deviceConfiguration, fontConfiguration, colorConfiguration, autoCloseTrigger);
+            TerminalEmulatorAutoCloseTrigger... autoCloseTriggers) {
+        this(title, null, deviceConfiguration, fontConfiguration, colorConfiguration, autoCloseTriggers);
     }
 
     /**
@@ -117,23 +91,23 @@ public class SwingTerminalFrame extends JFrame implements IOSafeTerminal {
      * @param deviceConfiguration Device configuration for the embedded SwingTerminal
      * @param fontConfiguration Font configuration for the embedded SwingTerminal
      * @param colorConfiguration Color configuration for the embedded SwingTerminal
-     * @param autoCloseTrigger What to trigger automatic disposal of the JFrame
+     * @param autoCloseTriggers What to trigger automatic disposal of the JFrame
      */
     public SwingTerminalFrame(String title,
                               TerminalSize terminalSize,
                               TerminalEmulatorDeviceConfiguration deviceConfiguration,
                               SwingTerminalFontConfiguration fontConfiguration,
                               TerminalEmulatorColorConfiguration colorConfiguration,
-                              TerminalEmulatorAutoCloseTrigger autoCloseTrigger) {
+                              TerminalEmulatorAutoCloseTrigger... autoCloseTriggers) {
         this(title,
                 new SwingTerminal(terminalSize, deviceConfiguration, fontConfiguration, colorConfiguration),
-                autoCloseTrigger);
+                autoCloseTriggers);
     }
     
-    private SwingTerminalFrame(String title, SwingTerminal swingTerminal, TerminalEmulatorAutoCloseTrigger autoCloseTrigger) {
+    private SwingTerminalFrame(String title, SwingTerminal swingTerminal, TerminalEmulatorAutoCloseTrigger... autoCloseTriggers) {
         super(title != null ? title : "SwingTerminalFrame");
         this.swingTerminal = swingTerminal;
-        this.autoCloseTrigger = autoCloseTrigger;
+        this.autoCloseTriggers = EnumSet.copyOf(Arrays.asList(autoCloseTriggers));
         this.disposed = false;
 
         getContentPane().setLayout(new BorderLayout());
@@ -147,19 +121,37 @@ public class SwingTerminalFrame extends JFrame implements IOSafeTerminal {
     }
 
     /**
-     * Returns the auto-close trigger used by the SwingTerminalFrame
+     * Returns the auto-close triggers used by the SwingTerminalFrame
      * @return Current auto-close trigger
      */
-    public TerminalEmulatorAutoCloseTrigger getAutoCloseTrigger() {
-        return autoCloseTrigger;
+    public Set<TerminalEmulatorAutoCloseTrigger> getAutoCloseTrigger() {
+        return EnumSet.copyOf(autoCloseTriggers);
     }
 
     /**
-     * Changes the current auto-close trigger used by this SwingTerminalFrame
-     * @param autoCloseTrigger New auto-close trigger to use
+     * Sets the auto-close trigger to use on this terminal. This will reset any previous triggers. If called with
+     * {@code null}, all triggers are cleared.
+     * @param autoCloseTrigger Auto-close trigger to use on this terminal, or {@code null} to clear all existing triggers
+     * @return Itself
      */
-    public void setAutoCloseTrigger(TerminalEmulatorAutoCloseTrigger autoCloseTrigger) {
-        this.autoCloseTrigger = autoCloseTrigger;
+    public SwingTerminalFrame setAutoCloseTrigger(TerminalEmulatorAutoCloseTrigger autoCloseTrigger) {
+        this.autoCloseTriggers.clear();
+        if(autoCloseTrigger != null) {
+            this.autoCloseTriggers.add(autoCloseTrigger);
+        }
+        return this;
+    }
+
+    /**
+     * Adds an auto-close trigger to use on this terminal.
+     * @param autoCloseTrigger Auto-close trigger to add to this terminal
+     * @return Itself
+     */
+    public SwingTerminalFrame addAutoCloseTrigger(TerminalEmulatorAutoCloseTrigger autoCloseTrigger) {
+        if(autoCloseTrigger != null) {
+            this.autoCloseTriggers.add(autoCloseTrigger);
+        }
+        return this;
     }
 
     @Override
@@ -177,7 +169,7 @@ public class SwingTerminalFrame extends JFrame implements IOSafeTerminal {
             return new KeyStroke(KeyType.EOF);
         }
         KeyStroke keyStroke = swingTerminal.pollInput();
-        if(autoCloseTrigger == TerminalEmulatorAutoCloseTrigger.CloseOnEscape &&
+        if(autoCloseTriggers.contains(TerminalEmulatorAutoCloseTrigger.CloseOnEscape) &&
                 keyStroke != null && 
                 keyStroke.getKeyType() == KeyType.Escape) {
             dispose();
@@ -186,7 +178,7 @@ public class SwingTerminalFrame extends JFrame implements IOSafeTerminal {
     }
 
     @Override
-    public KeyStroke readInput() throws IOException {
+    public KeyStroke readInput() {
         return swingTerminal.readInput();
     }
 
@@ -198,7 +190,7 @@ public class SwingTerminalFrame extends JFrame implements IOSafeTerminal {
     @Override
     public void exitPrivateMode() {
         swingTerminal.exitPrivateMode();
-        if(autoCloseTrigger == TerminalEmulatorAutoCloseTrigger.CloseOnExitPrivateMode) {
+        if(autoCloseTriggers.contains(TerminalEmulatorAutoCloseTrigger.CloseOnExitPrivateMode)) {
             dispose();
         }
     }
@@ -234,7 +226,7 @@ public class SwingTerminalFrame extends JFrame implements IOSafeTerminal {
     }
 
     @Override
-    public TextGraphics newTextGraphics() throws IOException {
+    public TextGraphics newTextGraphics() {
         return swingTerminal.newTextGraphics();
     }
 
@@ -274,17 +266,22 @@ public class SwingTerminalFrame extends JFrame implements IOSafeTerminal {
     }
 
     @Override
+    public void bell() {
+        swingTerminal.bell();
+    }
+
+    @Override
     public void flush() {
         swingTerminal.flush();
     }
 
     @Override
-    public void addResizeListener(ResizeListener listener) {
+    public void addResizeListener(TerminalResizeListener listener) {
         swingTerminal.addResizeListener(listener);
     }
 
     @Override
-    public void removeResizeListener(ResizeListener listener) {
+    public void removeResizeListener(TerminalResizeListener listener) {
         swingTerminal.removeResizeListener(listener);
     }
 }

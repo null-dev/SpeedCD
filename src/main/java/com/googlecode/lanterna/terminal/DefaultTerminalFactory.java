@@ -14,12 +14,13 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.terminal;
 
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.terminal.ansi.CygwinTerminal;
+import com.googlecode.lanterna.terminal.ansi.UnixLikeTTYTerminal;
 import com.googlecode.lanterna.terminal.ansi.UnixTerminal;
 import com.googlecode.lanterna.terminal.swing.*;
 
@@ -27,7 +28,9 @@ import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Constructor;
 import java.nio.charset.Charset;
+import java.util.EnumSet;
 
 /**
  * This TerminalFactory implementation uses a simple auto-detection mechanism for figuring out which terminal 
@@ -51,7 +54,7 @@ public final class DefaultTerminalFactory implements TerminalFactory {
     private boolean forceAWTOverSwing;
     private String title;
     private boolean autoOpenTerminalFrame;
-    private TerminalEmulatorAutoCloseTrigger autoCloseTrigger;
+    private final EnumSet<TerminalEmulatorAutoCloseTrigger> autoCloseTriggers;
     private TerminalEmulatorColorConfiguration colorConfiguration;
     private TerminalEmulatorDeviceConfiguration deviceConfiguration;
     private AWTTerminalFontConfiguration fontConfiguration;
@@ -79,7 +82,7 @@ public final class DefaultTerminalFactory implements TerminalFactory {
         this.forceTextTerminal = false;
         this.autoOpenTerminalFrame = true;
         this.title = null;
-        this.autoCloseTrigger = TerminalEmulatorAutoCloseTrigger.CloseOnExitPrivateMode;
+        this.autoCloseTriggers = EnumSet.of(TerminalEmulatorAutoCloseTrigger.CloseOnExitPrivateMode);
         this.mouseCaptureMode = null;
 
         //SwingTerminal will replace these null values for the default implementation if they are unchanged
@@ -92,7 +95,7 @@ public final class DefaultTerminalFactory implements TerminalFactory {
     public Terminal createTerminal() throws IOException {
         if (GraphicsEnvironment.isHeadless() || forceTextTerminal || System.console() != null) {
             if(isOperatingSystemWindows()) {
-                return createCygwinTerminal(outputStream, inputStream, charset);
+                return createWindowsTerminal();
             }
             else {
                 return createUnixTerminal(outputStream, inputStream, charset);
@@ -130,7 +133,7 @@ public final class DefaultTerminalFactory implements TerminalFactory {
                 deviceConfiguration,
                 fontConfiguration,
                 colorConfiguration,
-                autoCloseTrigger);
+                autoCloseTriggers.toArray(new TerminalEmulatorAutoCloseTrigger[autoCloseTriggers.size()]));
     }
 
     public SwingTerminalFrame createSwingTerminal() {
@@ -140,7 +143,7 @@ public final class DefaultTerminalFactory implements TerminalFactory {
                 deviceConfiguration,
                 fontConfiguration instanceof SwingTerminalFontConfiguration ? (SwingTerminalFontConfiguration)fontConfiguration : null,
                 colorConfiguration,
-                autoCloseTrigger);
+                autoCloseTriggers.toArray(new TerminalEmulatorAutoCloseTrigger[autoCloseTriggers.size()]));
     }
 
     private boolean hasSwing() {
@@ -209,12 +212,28 @@ public final class DefaultTerminalFactory implements TerminalFactory {
     }
 
     /**
-     * Sets the auto-close trigger to use on created SwingTerminalFrames created by this factory
-     * @param autoCloseTrigger Auto-close trigger to use on created SwingTerminalFrames created by this factory
+     * Sets the auto-close trigger to use on created SwingTerminalFrames created by this factory. This will reset any
+     * previous triggers. If called with {@code null}, all triggers are cleared.
+     * @param autoCloseTrigger Auto-close trigger to use on created SwingTerminalFrames created by this factory, or {@code null} to clear all existing triggers
      * @return Reference to itself, so multiple .set-calls can be chained
      */
     public DefaultTerminalFactory setTerminalEmulatorFrameAutoCloseTrigger(TerminalEmulatorAutoCloseTrigger autoCloseTrigger) {
-        this.autoCloseTrigger = autoCloseTrigger;
+        this.autoCloseTriggers.clear();
+        if(autoCloseTrigger != null) {
+            this.autoCloseTriggers.add(autoCloseTrigger);
+        }
+        return this;
+    }
+
+    /**
+     * Adds an auto-close trigger to use on created SwingTerminalFrames created by this factory
+     * @param autoCloseTrigger Auto-close trigger to add to the created SwingTerminalFrames created by this factory
+     * @return Reference to itself, so multiple calls can be chained
+     */
+    public DefaultTerminalFactory addTerminalEmulatorFrameAutoCloseTrigger(TerminalEmulatorAutoCloseTrigger autoCloseTrigger) {
+        if(autoCloseTrigger != null) {
+            this.autoCloseTriggers.add(autoCloseTrigger);
+        }
         return this;
     }
 
@@ -258,13 +277,32 @@ public final class DefaultTerminalFactory implements TerminalFactory {
         this.mouseCaptureMode = mouseCaptureMode;
         return this;
     }
+
+    private Terminal createWindowsTerminal() throws IOException {
+        try {
+            Class<?> nativeImplementation = Class.forName("com.googlecode.lanterna.terminal.WindowsTerminal");
+            Constructor<?> constructor = nativeImplementation.getConstructor(InputStream.class, OutputStream.class, Charset.class, UnixLikeTTYTerminal.CtrlCBehaviour.class);
+            return (Terminal)constructor.newInstance(inputStream, outputStream, charset, UnixLikeTTYTerminal.CtrlCBehaviour.CTRL_C_KILLS_APPLICATION);
+        }
+        catch(Exception ignore) {
+            return createCygwinTerminal(outputStream, inputStream, charset);
+        }
+    }
     
     private Terminal createCygwinTerminal(OutputStream outputStream, InputStream inputStream, Charset charset) throws IOException {
         return new CygwinTerminal(inputStream, outputStream, charset);
     }
 
     private Terminal createUnixTerminal(OutputStream outputStream, InputStream inputStream, Charset charset) throws IOException {
-        UnixTerminal unixTerminal = new UnixTerminal(inputStream, outputStream, charset);
+        UnixTerminal unixTerminal;
+        try {
+            Class<?> nativeImplementation = Class.forName("com.googlecode.lanterna.terminal.NativeGNULinuxTerminal");
+            Constructor<?> constructor = nativeImplementation.getConstructor(InputStream.class, OutputStream.class, Charset.class, UnixLikeTTYTerminal.CtrlCBehaviour.class);
+            unixTerminal = (UnixTerminal)constructor.newInstance(inputStream, outputStream, charset, UnixLikeTTYTerminal.CtrlCBehaviour.CTRL_C_KILLS_APPLICATION);
+        }
+        catch(Exception ignore) {
+            unixTerminal = new UnixTerminal(inputStream, outputStream, charset);
+        }
         if(mouseCaptureMode != null) {
             unixTerminal.setMouseCaptureMode(mouseCaptureMode);
         }

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.gui2;
 
@@ -30,6 +30,12 @@ import java.io.IOException;
  */
 public interface TextGUI {
     /**
+     * Returns the theme currently assigned to this {@link TextGUI}
+     * @return Currently active {@link Theme}
+     */
+    Theme getTheme();
+
+    /**
      * Sets the global theme to be used by this TextGUI. This value will be set on every TextGUIGraphics object created
      * for drawing the GUI, but individual components can override this if they want. If you don't call this method
      * you should assume that a default theme is assigned by the library.
@@ -44,14 +50,14 @@ public interface TextGUI {
      * processed as usual before this).
      * @return {@code true} if at least one key stroke was read and processed, {@code false} if there was nothing on the
      * input queue (only for non-blocking IO)
-     * @throws IOException In case there was an underlying I/O error
+     * @throws java.io.IOException In case there was an underlying I/O error
      * @throws java.io.EOFException In the input stream received an EOF marker
      */
     boolean processInput() throws IOException;
 
     /**
      * Updates the screen, to make any changes visible to the user.
-     * @throws IOException In case there was an underlying I/O error
+     * @throws java.io.IOException In case there was an underlying I/O error
      */
     void updateScreen() throws IOException;
 

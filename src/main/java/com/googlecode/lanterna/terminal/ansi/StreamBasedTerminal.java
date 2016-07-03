@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.terminal.ansi;
 
@@ -25,6 +25,7 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 
 import com.googlecode.lanterna.Symbols;
+import com.googlecode.lanterna.TerminalTextUtils;
 import com.googlecode.lanterna.input.InputDecoder;
 import com.googlecode.lanterna.input.KeyDecodingProfile;
 import com.googlecode.lanterna.input.KeyStroke;
@@ -32,11 +33,10 @@ import com.googlecode.lanterna.input.ScreenInfoAction;
 import com.googlecode.lanterna.input.ScreenInfoCharacterPattern;
 import com.googlecode.lanterna.terminal.AbstractTerminal;
 import com.googlecode.lanterna.TerminalPosition;
-import com.googlecode.lanterna.TerminalSize;
+
 import java.io.ByteArrayOutputStream;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -60,7 +60,8 @@ public abstract class StreamBasedTerminal extends AbstractTerminal {
     private final InputDecoder inputDecoder;
     private final Queue<KeyStroke> keyQueue;
     private final Lock readLock;
-    private final Queue<TerminalPosition> cursorPositionReportQueue;
+
+    private volatile TerminalPosition lastReportedCursorPosition;
     
     @SuppressWarnings("WeakerAccess")
     public StreamBasedTerminal(InputStream terminalInput, OutputStream terminalOutput, Charset terminalCharset) {
@@ -75,7 +76,7 @@ public abstract class StreamBasedTerminal extends AbstractTerminal {
         this.inputDecoder = new InputDecoder(new InputStreamReader(this.terminalInput, this.terminalCharset));
         this.keyQueue = new LinkedList<KeyStroke>();
         this.readLock = new ReentrantLock();
-        this.cursorPositionReportQueue = new LinkedBlockingQueue<TerminalPosition>();
+        this.lastReportedCursorPosition = null;
         //noinspection ConstantConditions
     }
 
@@ -87,13 +88,15 @@ public abstract class StreamBasedTerminal extends AbstractTerminal {
      */
     @Override
     public void putCharacter(char c) throws IOException {
-        writeToTerminal(translateCharacter(c));
+        if(TerminalTextUtils.isPrintableCharacter(c)) {
+            writeToTerminal(translateCharacter(c));
+        }
     }
 
     /**
      * This method will write a list of bytes directly to the output stream of the terminal.
      * @param bytes Bytes to write to the terminal (synchronized)
-     * @throws IOException If there was an underlying I/O error
+     * @throws java.io.IOException If there was an underlying I/O error
      */
     @SuppressWarnings("WeakerAccess")
     protected void writeToTerminal(byte... bytes) throws IOException {
@@ -130,7 +133,13 @@ public abstract class StreamBasedTerminal extends AbstractTerminal {
         }
         return buffer.toByteArray();
     }
-    
+
+    @Override
+    public void bell() throws IOException {
+        terminalOutput.write((byte)7);
+        terminalOutput.flush();
+    }
+
     /**
      * Adds a KeyDecodingProfile to be used when converting raw user input characters to {@code Key} objects.
      *
@@ -153,13 +162,24 @@ public abstract class StreamBasedTerminal extends AbstractTerminal {
         return inputDecoder;
     }
 
-    void resetCursorPositionReportQueue() {
-        cursorPositionReportQueue.clear();
+    /**
+     * Used by the cursor reporting methods to reset any previous position memorized, so we're guaranteed to return the
+     * next reported position
+     */
+    void resetMemorizedCursorPosition() {
+        lastReportedCursorPosition = null;
     }
 
+    /**
+     * Waits for up to 2 seconds for a terminal cursor position report to appear in the input stream. If the timeout
+     * expires, it throws {@code IllegalStateException}. You should have send the cursor position query already before
+     * calling this method.
+     * @return Current position of the cursor
+     * @throws IOException If there was an I/O error
+     */
     synchronized TerminalPosition waitForCursorPositionReport() throws IOException {
         long startTime = System.currentTimeMillis();
-        TerminalPosition cursorPosition = cursorPositionReportQueue.poll();
+        TerminalPosition cursorPosition = lastReportedCursorPosition;
         while(cursorPosition == null) {
             if(System.currentTimeMillis() - startTime > 2000) {
                 throw new IllegalStateException("Terminal didn't send any position report for 2 seconds, please file a bug with a reproduce!");
@@ -169,9 +189,9 @@ public abstract class StreamBasedTerminal extends AbstractTerminal {
                 keyQueue.add(keyStroke);
             }
             else {
-                try { Thread.sleep(1); } catch(InterruptedException e) {}
+                try { Thread.sleep(1); } catch(InterruptedException ignored) {}
             }
-            cursorPosition = cursorPositionReportQueue.poll();
+            cursorPosition = lastReportedCursorPosition;
         }
         return cursorPosition;
     }
@@ -207,8 +227,7 @@ public abstract class StreamBasedTerminal extends AbstractTerminal {
                 KeyStroke key = inputDecoder.getNextCharacter(blocking);
                 ScreenInfoAction report = ScreenInfoCharacterPattern.tryToAdopt(key);
                 if(report != null) {
-                    TerminalPosition reportedTerminalPosition = report.getPosition();
-                    cursorPositionReportQueue.add(reportedTerminalPosition);
+                    lastReportedCursorPosition = report.getPosition();
                 }
                 else {
                     return key;

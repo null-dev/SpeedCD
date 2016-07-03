@@ -14,13 +14,14 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.gui2;
 
 import com.googlecode.lanterna.TerminalTextUtils;
 import com.googlecode.lanterna.TerminalPosition;
 import com.googlecode.lanterna.TerminalSize;
+import com.googlecode.lanterna.graphics.ThemeDefinition;
 import com.googlecode.lanterna.input.KeyStroke;
 
 import java.util.ArrayList;
@@ -61,9 +62,8 @@ public class TextBox extends AbstractInteractableComponent<TextBox> {
     private boolean readOnly;
     private boolean horizontalFocusSwitching;
     private boolean verticalFocusSwitching;
-    private int maxLineLength;
+    private final int maxLineLength;
     private int longestRow;
-    private char unusedSpaceCharacter;
     private Character mask;
     private Pattern validationPattern;
 
@@ -136,10 +136,13 @@ public class TextBox extends AbstractInteractableComponent<TextBox> {
         this.caretPosition = TerminalPosition.TOP_LEFT_CORNER;
         this.maxLineLength = -1;
         this.longestRow = 1;    //To fit the cursor
-        this.unusedSpaceCharacter = ' ';
         this.mask = null;
         this.validationPattern = null;
         setText(initialContent);
+
+        // Re-adjust caret position
+        this.caretPosition = TerminalPosition.TOP_LEFT_CORNER.withColumn(getLine(0).length());
+
         if (preferredSize == null) {
             preferredSize = new TerminalSize(Math.max(10, longestRow), lines.size());
         }
@@ -260,6 +263,43 @@ public class TextBox extends AbstractInteractableComponent<TextBox> {
      */
     public TerminalPosition getCaretPosition() {
         return caretPosition;
+    }
+
+    /**
+     * Moves the text caret position horizontally to a new position in the {@link TextBox}. For multi-line
+     * {@link TextBox}:es, this will move the cursor within the current line. If the position is out of bounds, it is
+     * automatically set back into range.
+     * @param column Position, in characters, within the {@link TextBox} (on the current line for multi-line
+     * {@link TextBox}:es) to where the text cursor should be moved
+     * @return Itself
+     */
+    public synchronized TextBox setCaretPosition(int column) {
+        return setCaretPosition(getCaretPosition().getRow(), column);
+    }
+
+    /**
+     * Moves the text caret position to a new position in the {@link TextBox}. For single-line {@link TextBox}:es, the
+     * line component is not used. If one of the positions are out of bounds, it is automatically set back into range.
+     * @param line Which line inside the {@link TextBox} to move the caret to (0 being the first line), ignored if the
+     *             {@link TextBox} is single-line
+     * @param column  What column on the specified line to move the text caret to (0 being the first column)
+     * @return Itself
+     */
+    public synchronized TextBox setCaretPosition(int line, int column) {
+        if(line < 0) {
+            line = 0;
+        }
+        else if(line >= lines.size()) {
+            line = lines.size() - 1;
+        }
+        if(column < 0) {
+            column = 0;
+        }
+        else if(column > lines.get(line).length()) {
+            column = lines.get(line).length();
+        }
+        caretPosition = caretPosition.withRow(line).withColumn(column);
+        return this;
     }
 
     /**
@@ -384,7 +424,7 @@ public class TextBox extends AbstractInteractableComponent<TextBox> {
      * Returns the line on the specific row. For non-multiline TextBox:es, calling this with index set to 0 will return
      * the same as calling {@code getText()}. If the row index is invalid (less than zero or equals or larger than the
      * number of rows), this method will throw IndexOutOfBoundsException.
-     * @param index
+     * @param index Index of the row to return the contents from
      * @return The line at the specified index, as a String
      * @throws IndexOutOfBoundsException if the row index is less than zero or too large
      */
@@ -613,9 +653,10 @@ public class TextBox extends AbstractInteractableComponent<TextBox> {
      */
     public static class DefaultTextBoxRenderer implements TextBoxRenderer {
         private TerminalPosition viewTopLeft;
-        private ScrollBar verticalScrollBar;
-        private ScrollBar horizontalScrollBar;
+        private final ScrollBar verticalScrollBar;
+        private final ScrollBar horizontalScrollBar;
         private boolean hideScrollBars;
+        private Character unusedSpaceCharacter;
 
         /**
          * Default constructor
@@ -625,6 +666,20 @@ public class TextBox extends AbstractInteractableComponent<TextBox> {
             verticalScrollBar = new ScrollBar(Direction.VERTICAL);
             horizontalScrollBar = new ScrollBar(Direction.HORIZONTAL);
             hideScrollBars = false;
+            unusedSpaceCharacter = null;
+        }
+
+        /**
+         * Sets the character to represent an empty untyped space in the text box. This will be an empty space by
+         * default but you can override it to anything that isn't double-width.
+         * @param unusedSpaceCharacter Character to draw in unused space of the {@link TextBox}
+         * @throws IllegalArgumentException If unusedSpaceCharacter is a double-width character
+         */
+        public void setUnusedSpaceCharacter(char unusedSpaceCharacter) {
+            if(TerminalTextUtils.isCharDoubleWidth(unusedSpaceCharacter)) {
+                throw new IllegalArgumentException("Cannot use a double-width character as the unused space character in a TextBox");
+            }
+            this.unusedSpaceCharacter = unusedSpaceCharacter;
         }
 
         @Override
@@ -701,20 +756,22 @@ public class TextBox extends AbstractInteractableComponent<TextBox> {
 
             //Draw scrollbars, if any
             if(drawVerticalScrollBar) {
+                verticalScrollBar.onAdded(component.getParent());
                 verticalScrollBar.setViewSize(realTextArea.getRows());
                 verticalScrollBar.setScrollMaximum(textBoxLineCount);
                 verticalScrollBar.setScrollPosition(viewTopLeft.getRow());
                 verticalScrollBar.draw(graphics.newTextGraphics(
                         new TerminalPosition(graphics.getSize().getColumns() - 1, 0),
-                        new TerminalSize(1, graphics.getSize().getRows() - 1)));
+                        new TerminalSize(1, graphics.getSize().getRows() - (drawHorizontalScrollBar ? 1 : 0))));
             }
             if(drawHorizontalScrollBar) {
+                horizontalScrollBar.onAdded(component.getParent());
                 horizontalScrollBar.setViewSize(realTextArea.getColumns());
                 horizontalScrollBar.setScrollMaximum(component.longestRow - 1);
                 horizontalScrollBar.setScrollPosition(viewTopLeft.getColumn());
                 horizontalScrollBar.draw(graphics.newTextGraphics(
                         new TerminalPosition(0, graphics.getSize().getRows() - 1),
-                        new TerminalSize(graphics.getSize().getColumns() - 1, 1)));
+                        new TerminalSize(graphics.getSize().getColumns() - (drawVerticalScrollBar ? 1 : 0), 1)));
             }
         }
 
@@ -732,13 +789,29 @@ public class TextBox extends AbstractInteractableComponent<TextBox> {
                     viewTopLeft = viewTopLeft.withRow(0);
                 }
             }
+            ThemeDefinition themeDefinition = component.getThemeDefinition();
             if (component.isFocused()) {
-                graphics.applyThemeStyle(graphics.getThemeDefinition(TextBox.class).getActive());
+                if(component.isReadOnly()) {
+                    graphics.applyThemeStyle(themeDefinition.getSelected());
+                }
+                else {
+                    graphics.applyThemeStyle(themeDefinition.getActive());
+                }
             }
             else {
-                graphics.applyThemeStyle(graphics.getThemeDefinition(TextBox.class).getNormal());
+                if(component.isReadOnly()) {
+                    graphics.applyThemeStyle(themeDefinition.getInsensitive());
+                }
+                else {
+                    graphics.applyThemeStyle(themeDefinition.getNormal());
+                }
             }
-            graphics.fill(component.unusedSpaceCharacter);
+
+            Character fillCharacter = unusedSpaceCharacter;
+            if(fillCharacter == null) {
+                fillCharacter = themeDefinition.getCharacter("FILL", ' ');
+            }
+            graphics.fill(fillCharacter);
 
             if(!component.isReadOnly()) {
                 //Adjust caret position if necessary

@@ -14,25 +14,24 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
-package com.googlecode.lanterna.terminal.swing;
+package com.googlecode.lanterna.terminal.virtual;
 
-import com.googlecode.lanterna.graphics.AbstractTextGraphics;
-import com.googlecode.lanterna.TextCharacter;
 import com.googlecode.lanterna.TerminalPosition;
 import com.googlecode.lanterna.TerminalSize;
+import com.googlecode.lanterna.TextCharacter;
+import com.googlecode.lanterna.graphics.AbstractTextGraphics;
 import com.googlecode.lanterna.graphics.TextGraphics;
 
 /**
- * Implementation of TextGraphics for the SwingTerminal, which is able to access directly into the TextBuffer and set
- * values in there directly.
+ * Implementation of {@link TextGraphics} for {@link VirtualTerminal}
  * @author Martin
  */
 class VirtualTerminalTextGraphics extends AbstractTextGraphics {
-    private final VirtualTerminal virtualTerminal;
+    private final DefaultVirtualTerminal virtualTerminal;
 
-    VirtualTerminalTextGraphics(VirtualTerminal virtualTerminal) {
+    VirtualTerminalTextGraphics(DefaultVirtualTerminal virtualTerminal) {
         this.virtualTerminal = virtualTerminal;
     }
 
@@ -62,6 +61,6 @@ class VirtualTerminalTextGraphics extends AbstractTextGraphics {
 
     @Override
     public TerminalSize getSize() {
-        return virtualTerminal.getViewportSize();
+        return virtualTerminal.getTerminalSize();
     }
 }

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.gui2;
 
@@ -35,7 +35,7 @@ public interface TextGUIThread {
      * executed at a later time when the event processing is done.
      *
      * @param runnable Code to run asynchronously
-     * @throws IllegalStateException If the GUI thread is not running
+     * @throws java.lang.IllegalStateException If the GUI thread is not running
      */
     void invokeLater(Runnable runnable) throws IllegalStateException;
 
@@ -46,7 +46,7 @@ public interface TextGUIThread {
      * must either call this method directly to make the GUI update or use one of the methods on
      * {@code WindowBasedTextGUI} that blocks until a particular window has closed.
      * @return {@code true} if there was anything to process or the GUI was updated, otherwise {@code false}
-     * @throws IOException
+     * @throws IOException If there was an I/O error when processing and updating the GUI
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     boolean processEventsAndUpdate() throws IOException;

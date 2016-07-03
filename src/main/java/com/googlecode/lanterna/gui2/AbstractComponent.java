@@ -14,12 +14,15 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.gui2;
 
 import com.googlecode.lanterna.TerminalPosition;
 import com.googlecode.lanterna.TerminalSize;
+import com.googlecode.lanterna.bundle.LanternaThemes;
+import com.googlecode.lanterna.graphics.Theme;
+import com.googlecode.lanterna.graphics.ThemeDefinition;
 
 /**
  * AbstractComponent provides some good default behaviour for a {@code Component}, all components in Lanterna extends
@@ -41,11 +44,30 @@ import com.googlecode.lanterna.TerminalSize;
  * @param <T> Should always be itself, this value will be used for the {@code ComponentRenderer} declaration
  */
 public abstract class AbstractComponent<T extends Component> implements Component {
-    private ComponentRenderer<T> renderer;
+    /**
+     * Manually set renderer
+     */
+    private ComponentRenderer<T> overrideRenderer;
+    /**
+     * If overrideRenderer is not set, this is used instead if not null, set by the theme
+     */
+    private ComponentRenderer<T> themeRenderer;
+
+    /**
+     * To keep track of the theme that created the themeRenderer, so we can reset it if the theme changes
+     */
+    private Theme themeRenderersTheme;
+
+    /**
+     * If the theme had nothing for this component and no override is set, this is the third fallback
+     */
+    private ComponentRenderer<T> defaultRenderer;
+
     private Container parent;
     private TerminalSize size;
     private TerminalSize explicitPreferredSize;   //This is keeping the value set by the user (if setPreferredSize() is used)
     private TerminalPosition position;
+    private Theme themeOverride;
     private LayoutData layoutData;
     private boolean invalid;
 
@@ -59,7 +81,10 @@ public abstract class AbstractComponent<T extends Component> implements Componen
         layoutData = null;
         invalid = true;
         parent = null;
-        renderer = null; //Will be set on the first call to getRenderer()
+        overrideRenderer = null;
+        themeRenderer = null;
+        themeRenderersTheme = null;
+        defaultRenderer = null;
     }
     
     /**
@@ -69,31 +94,6 @@ public abstract class AbstractComponent<T extends Component> implements Componen
      * @return Renderer to use when sizing and drawing this component
      */
     protected abstract ComponentRenderer<T> createDefaultRenderer();
-
-    /**
-     * This will attempt to dynamically construct a {@code ComponentRenderer} class from a string, assumed to be passed
-     * in from a theme. This makes it possible to create themes that supplies their own {@code ComponentRenderers} that
-     * can even replace the ones built into lanterna and used for the bundled components.
-     *
-     * @param className Fully qualified name of the {@code ComponentRenderer} we want to instatiate
-     * @return {@code null} if {@code className} was null, otherwise the {@code ComponentRenderer} instance
-     * @throws RuntimeException If there were any problems instatiating the class
-     */
-    @SuppressWarnings("unchecked")
-    protected ComponentRenderer<T> getRendererFromTheme(String className) {
-        if(className == null) {
-            return null;
-        }
-        try {
-            return (ComponentRenderer<T>)Class.forName(className).newInstance();
-        } catch (InstantiationException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     /**
      * Takes a {@code Runnable} and immediately executes it if this is called on the designated GUI thread, otherwise
@@ -110,24 +110,47 @@ public abstract class AbstractComponent<T extends Component> implements Componen
     }
 
     /**
-     * Explicitly sets the {@code ComponentRenderer} to be used when drawing this component.
+     * Explicitly sets the {@code ComponentRenderer} to be used when drawing this component. This will override whatever
+     * the current theme is suggesting or what the default renderer is. If you call this with {@code null}, the override
+     * is cleared.
      * @param renderer {@code ComponentRenderer} to be used when drawing this component
      * @return Itself
      */
     public T setRenderer(ComponentRenderer<T> renderer) {
-        this.renderer = renderer;
+        this.overrideRenderer = renderer;
         return self();
     }
 
     @Override
     public synchronized ComponentRenderer<T> getRenderer() {
-        if(renderer == null) {
-            renderer = createDefaultRenderer();
-            if(renderer == null) {
-                throw new IllegalStateException(getClass() + " returns a null default renderer");
+        // First try the override
+        if(overrideRenderer != null) {
+            return overrideRenderer;
+        }
+
+        // Then try to create and return a renderer from the theme
+        Theme currentTheme = getTheme();
+        if((themeRenderer == null && getBasePane() != null) ||
+                // Check if the theme has changed
+                themeRenderer != null && currentTheme != themeRenderersTheme) {
+
+            themeRenderer = currentTheme.getDefinition(getClass()).getRenderer(selfClass());
+            if(themeRenderer != null) {
+                themeRenderersTheme = currentTheme;
             }
         }
-        return renderer;
+        if(themeRenderer != null) {
+            return themeRenderer;
+        }
+
+        // Finally, fallback to the default renderer
+        if(defaultRenderer == null) {
+            defaultRenderer = createDefaultRenderer();
+            if(defaultRenderer == null) {
+                throw new IllegalStateException(getClass() + " returned a null default renderer");
+            }
+        }
+        return defaultRenderer;
     }
 
     @Override
@@ -189,16 +212,6 @@ public abstract class AbstractComponent<T extends Component> implements Componen
 
     @Override
     public final synchronized void draw(final TextGUIGraphics graphics) {
-        if(getRenderer() == null) {
-            ComponentRenderer<T> renderer = getRendererFromTheme(graphics.getThemeDefinition(getClass()).getRenderer());
-            if(renderer == null) {
-                renderer = createDefaultRenderer();
-                if(renderer == null) {
-                    throw new IllegalStateException(getClass() + " returned a null default renderer");
-                }
-            }
-            setRenderer(renderer);
-        }
         //Delegate drawing the component to the renderer
         setSize(graphics.getSize());
         onBeforeDrawing();
@@ -223,6 +236,7 @@ public abstract class AbstractComponent<T extends Component> implements Componen
      * {@code TextGUIGraphics} supplied is the same that was fed into the renderer.
      * @param graphics Graphics object you can use to manipulate the appearance of the component
      */
+    @SuppressWarnings("EmptyMethod")
     protected void onAfterDrawing(TextGUIGraphics graphics) {
         //No operation by default
     }
@@ -268,7 +282,35 @@ public abstract class AbstractComponent<T extends Component> implements Componen
         }
         return parent.getTextGUI();
     }
-    
+
+    @Override
+    public synchronized Theme getTheme() {
+        if(themeOverride != null) {
+            return themeOverride;
+        }
+        else if(parent != null) {
+            return parent.getTheme();
+        }
+        else if(getBasePane() != null) {
+            return getBasePane().getTheme();
+        }
+        else {
+            return LanternaThemes.getDefaultTheme();
+        }
+    }
+
+    @Override
+    public ThemeDefinition getThemeDefinition() {
+        return getTheme().getDefinition(getClass());
+    }
+
+    @Override
+    public synchronized Component setTheme(Theme theme) {
+        themeOverride = theme;
+        invalidate();
+        return this;
+    }
+
     @Override
     public boolean isInside(Container container) {
         Component test = this;
@@ -327,6 +369,7 @@ public abstract class AbstractComponent<T extends Component> implements Componen
     @Override
     public synchronized void onRemoved(Container container) {
         parent = null;
+        themeRenderer = null;
     }
 
     /**
@@ -337,5 +380,10 @@ public abstract class AbstractComponent<T extends Component> implements Componen
     @SuppressWarnings("unchecked")
     protected T self() {
         return (T)this;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Class<T> selfClass() {
+        return (Class<T>)getClass();
     }
 }

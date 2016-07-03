@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.gui2;
 
@@ -78,7 +78,7 @@ public class Separator extends AbstractComponent<Separator> {
 
         @Override
         public void drawComponent(TextGUIGraphics graphics, Separator component) {
-            ThemeDefinition themeDefinition = graphics.getThemeDefinition(Separator.class);
+            ThemeDefinition themeDefinition = component.getThemeDefinition();
             graphics.applyThemeStyle(themeDefinition.getNormal());
             char character = themeDefinition.getCharacter(component.getDirection().name().toUpperCase(),
                     component.getDirection() == Direction.HORIZONTAL ? Symbols.SINGLE_LINE_HORIZONTAL : Symbols.SINGLE_LINE_VERTICAL);

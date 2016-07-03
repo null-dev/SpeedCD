@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.graphics;
 
@@ -26,7 +26,9 @@ public interface ThemedTextGraphics extends TextGraphics {
     /**
      * Returns the {@code Theme} object active on this {@code ThemedTextGraphics}
      * @return Active {@code Theme} object
+     * @deprecated Use the {@link Theme} attached to each component instead
      */
+    @Deprecated
     Theme getTheme();
 
     /**
@@ -35,7 +37,9 @@ public interface ThemedTextGraphics extends TextGraphics {
      * return null.
      * @param clazz Class to search ThemeDefinition for
      * @return ThemeDefinition that was resolved for this class
+     * @deprecated Use the {@link Theme} attached to each component instead
      */
+    @Deprecated
     ThemeDefinition getThemeDefinition(Class<?> clazz);
 
     /**

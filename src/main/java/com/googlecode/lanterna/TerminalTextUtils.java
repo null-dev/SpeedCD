@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna;
 
@@ -76,6 +76,37 @@ public class TerminalTextUtils {
     }
 
     /**
+     * Checks if a particular character is a control character, in Lanterna this currently means it's 0-31 or 127 in the
+     * ascii table.
+     * @param c character to test
+     * @return {@code true} if the character is a control character, {@code false} otherwise
+     */
+    public static boolean isControlCharacter(char c) {
+        return c < 32 || c == 127;
+    }
+
+    /**
+     * Checks if a particular character is printable. This generally means that the code is not a control character that
+     * isn't able to be printed to the terminal properly. For example, NULL, ENQ, BELL and ESC and all control codes
+     * that has no proper character associated with it so the behaviour is undefined and depends completely on the
+     * terminal what happens if you try to print them. However, certain control characters have a particular meaning to
+     * the terminal and are as such considered printable. In Lanterna, we consider these control characters printable:
+     * <ul>
+     *     <li>Backspace</li>
+     *     <li>Horizontal Tab</li>
+     *     <li>Line feed</li>
+     * </ul>
+     *
+     * @param c character to test
+     * @return {@code true} if the character is considered printable, {@code false} otherwise
+     */
+    public static boolean isPrintableCharacter(char c) {
+        return !isControlCharacter(c) || c == '\t' || c == '\n' || c == '\b';
+    }
+
+    /**
+     * @param s String to measure
+     * @return Returns the width (in columns) the string will take up when printed on the screen
      * @deprecated Call {@code getColumnWidth(s)} instead
      */
     @Deprecated
@@ -203,7 +234,7 @@ public class TerminalTextUtils {
     /**
      * This method will calculate word wrappings given a number of lines of text and how wide the text can be printed.
      * The result is a list of new rows where word-wrapping was applied.
-     * @param maxWidth Maximum number of columns that can be used before word-wrapping is applied, if <= 0 then the
+     * @param maxWidth Maximum number of columns that can be used before word-wrapping is applied, if &lt;= 0 then the
      *                 lines will be returned unchanged
      * @param lines Input text
      * @return The input text word-wrapped at {@code maxWidth}; this may contain more rows than the input text
@@ -255,7 +286,7 @@ public class TerminalTextUtils {
                     while(characterIndex < row.length() &&
                           Character.isSpaceChar(row.charAt(characterIndex))) {
                         characterIndex++;
-                    };
+                    }
                     if (characterIndex < row.length()) { // only if rest contains non-whitespace
                         linesToBeWrapped.addFirst(row.substring(characterIndex));
                     }

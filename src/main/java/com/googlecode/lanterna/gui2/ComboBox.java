@@ -1,6 +1,26 @@
+/*
+ * This file is part of lanterna (http://code.google.com/p/lanterna/).
+ *
+ * lanterna is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Copyright (C) 2010-2016 Martin
+ */
 package com.googlecode.lanterna.gui2;
 
 import com.googlecode.lanterna.*;
+import com.googlecode.lanterna.graphics.Theme;
+import com.googlecode.lanterna.graphics.ThemeDefinition;
 import com.googlecode.lanterna.input.KeyStroke;
 
 import java.util.ArrayList;
@@ -308,6 +328,17 @@ public class ComboBox<V> extends AbstractInteractableComponent<ComboBox<V>> {
     }
 
     /**
+     * Returns the item at the selected index, this is the same as calling:
+     * <pre>
+     *     comboBox.getItem(comboBox.getSelectedIndex());
+     * </pre>
+     * @return The item at the selected index
+     */
+    public synchronized V getSelectedItem() {
+        return getItem(getSelectedIndex());
+    }
+
+    /**
      * Adds a new listener to the {@code ComboBox} that will be called on certain user actions
      * @param listener Listener to attach to this {@code ComboBox}
      * @return Itself
@@ -385,7 +416,7 @@ public class ComboBox<V> extends AbstractInteractableComponent<ComboBox<V>> {
                 }
                 else {
                     popupWindow = new PopupWindow();
-                    popupWindow.setPosition(toGlobal(getPosition().withRelativeRow(1)));
+                    popupWindow.setPosition(toGlobal(new TerminalPosition(0, 1)));
                     ((WindowBasedTextGUI) getTextGUI()).addWindow(popupWindow);
                 }
                 break;
@@ -500,6 +531,11 @@ public class ComboBox<V> extends AbstractInteractableComponent<ComboBox<V>> {
             listBox.setSelectedIndex(getSelectedIndex());
             setComponent(listBox);
         }
+
+        @Override
+        public synchronized Theme getTheme() {
+            return ComboBox.this.getTheme();
+        }
     }
 
     /**
@@ -527,7 +563,12 @@ public class ComboBox<V> extends AbstractInteractableComponent<ComboBox<V>> {
         @Override
         public TerminalPosition getCursorLocation(ComboBox<V> comboBox) {
             if(comboBox.isDropDownFocused()) {
-                return new TerminalPosition(comboBox.getSize().getColumns() - 1, 0);
+                if(comboBox.getThemeDefinition().isCursorVisible()) {
+                    return new TerminalPosition(comboBox.getSize().getColumns() - 1, 0);
+                }
+                else {
+                    return null;
+                }
             }
             else {
                 int textInputPosition = comboBox.getTextInputPosition();
@@ -540,6 +581,7 @@ public class ComboBox<V> extends AbstractInteractableComponent<ComboBox<V>> {
         public TerminalSize getPreferredSize(final ComboBox<V> comboBox) {
             TerminalSize size = TerminalSize.ONE.withColumns(
                     (comboBox.getItemCount() == 0 ? TerminalTextUtils.getColumnWidth(comboBox.getText()) : 0) + 2);
+            //noinspection SynchronizationOnLocalVariableOrMethodParameter
             synchronized(comboBox) {
                 for(int i = 0; i < comboBox.getItemCount(); i++) {
                     V item = comboBox.getItem(i);
@@ -551,11 +593,17 @@ public class ComboBox<V> extends AbstractInteractableComponent<ComboBox<V>> {
 
         @Override
         public void drawComponent(TextGUIGraphics graphics, ComboBox<V> comboBox) {
-            graphics.setForegroundColor(TextColor.ANSI.WHITE);
-            graphics.setBackgroundColor(TextColor.ANSI.BLUE);
-            if(comboBox.isFocused()) {
-                graphics.setForegroundColor(TextColor.ANSI.YELLOW);
-                graphics.enableModifiers(SGR.BOLD);
+            ThemeDefinition themeDefinition = comboBox.getThemeDefinition();
+            if(comboBox.isReadOnly()) {
+                graphics.applyThemeStyle(themeDefinition.getNormal());
+            }
+            else {
+                if(comboBox.isFocused()) {
+                    graphics.applyThemeStyle(themeDefinition.getActive());
+                }
+                else {
+                    graphics.applyThemeStyle(themeDefinition.getPreLight());
+                }
             }
             graphics.fill(' ');
             int editableArea = graphics.getSize().getColumns() - 2; //This is exclusing the 'drop-down arrow'
@@ -575,12 +623,12 @@ public class ComboBox<V> extends AbstractInteractableComponent<ComboBox<V>> {
 
             String textToDraw = TerminalTextUtils.fitString(comboBox.getText(), textVisibleLeftPosition, editableArea);
             graphics.putString(0, 0, textToDraw);
-            if(comboBox.isFocused()) {
-                graphics.disableModifiers(SGR.BOLD);
+            graphics.applyThemeStyle(themeDefinition.getInsensitive());
+            graphics.setCharacter(editableArea, 0, themeDefinition.getCharacter("POPUP_SEPARATOR", Symbols.SINGLE_LINE_VERTICAL));
+            if(comboBox.isFocused() && comboBox.isDropDownFocused()) {
+                graphics.applyThemeStyle(themeDefinition.getSelected());
             }
-            graphics.setForegroundColor(TextColor.ANSI.BLACK);
-            graphics.setBackgroundColor(TextColor.ANSI.WHITE);
-            graphics.putString(editableArea, 0, "|" + Symbols.ARROW_DOWN);
+            graphics.setCharacter(editableArea + 1, 0, themeDefinition.getCharacter("POPUP", Symbols.TRIANGLE_DOWN_POINTING_BLACK));
         }
     }
 }

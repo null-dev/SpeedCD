@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.graphics;
 
@@ -107,8 +107,14 @@ public interface TextImage extends Scrollable {
      * @param destinationRowOffset Offset (in number of rows) in the target image where we want to first copied row to be
      * @param destinationColumnOffset Offset (in number of columns) in the target image where we want to first copied column to be
      */
-    void copyTo(TextImage destination, int startRowIndex, int rows, int startColumnIndex, int columns,
-                int destinationRowOffset, int destinationColumnOffset);
+    void copyTo(
+            TextImage destination,
+            int startRowIndex,
+            int rows,
+            int startColumnIndex,
+            int columns,
+            int destinationRowOffset,
+            int destinationColumnOffset);
     
     /**
      * Scroll a range of lines of this TextImage according to given distance.

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.terminal;
 
@@ -24,7 +24,6 @@ import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.input.KeyStroke;
 
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -66,9 +65,11 @@ public interface IOSafeTerminal extends Terminal {
     @Override
     byte[] enquireTerminal(int timeout, TimeUnit timeoutUnit);
     @Override
+    void bell();
+    @Override
     void flush();
     @Override
     KeyStroke pollInput();
     @Override
-    KeyStroke readInput() throws IOException;
+    KeyStroke readInput();
 }

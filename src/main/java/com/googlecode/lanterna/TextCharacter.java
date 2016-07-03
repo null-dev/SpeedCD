@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna;
 
@@ -95,7 +95,14 @@ public class TextCharacter {
             TextColor foregroundColor,
             TextColor backgroundColor,
             EnumSet<SGR> modifiers) {
-        
+
+        // Don't allow creating a TextCharacter containing a control character
+        // For backward-compatibility, do allow tab for now
+        // TODO: In lanterna 3.1, don't allow tab
+        if(TerminalTextUtils.isControlCharacter(character) && character != '\t') {
+            throw new IllegalArgumentException("Cannot create a TextCharacter from a control character (0x" + Integer.toHexString(character) + ")");
+        }
+
         if(foregroundColor == null) {
             foregroundColor = TextColor.ANSI.DEFAULT;
         }

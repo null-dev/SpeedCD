@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.screen;
 
@@ -22,8 +22,8 @@ import com.googlecode.lanterna.*;
 import com.googlecode.lanterna.graphics.Scrollable;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
-import com.googlecode.lanterna.terminal.ResizeListener;
 import com.googlecode.lanterna.terminal.Terminal;
+import com.googlecode.lanterna.terminal.TerminalResizeListener;
 
 import java.io.IOException;
 import java.util.Comparator;
@@ -54,7 +54,7 @@ public class TerminalScreen extends AbstractScreen {
      * work properly). Similarly, when you are done, you should call {@code stopScreen()} which will exit private mode.
      *
      * @param terminal Terminal object to create the DefaultScreen on top of
-     * @throws IOException If there was an underlying I/O error when querying the size of the terminal
+     * @throws java.io.IOException If there was an underlying I/O error when querying the size of the terminal
      */
     public TerminalScreen(Terminal terminal) throws IOException {
         this(terminal, DEFAULT_CHARACTER);
@@ -71,12 +71,12 @@ public class TerminalScreen extends AbstractScreen {
      *
      * @param terminal Terminal object to create the DefaultScreen on top of.
      * @param defaultCharacter What character to use for the initial state of the screen and expanded areas
-     * @throws IOException If there was an underlying I/O error when querying the size of the terminal
+     * @throws java.io.IOException If there was an underlying I/O error when querying the size of the terminal
      */
     public TerminalScreen(Terminal terminal, TextCharacter defaultCharacter) throws IOException {
         super(terminal.getTerminalSize(), defaultCharacter);
         this.terminal = terminal;
-        this.terminal.addResizeListener(new TerminalResizeListener());
+        this.terminal.addResizeListener(new TerminalScreenResizeListener());
         this.isStarted = false;
         this.fullRedrawHint = true;
     }
@@ -362,7 +362,8 @@ public class TerminalScreen extends AbstractScreen {
         if (scrollHint == null) {
             // no scroll hint yet: use the new one:
             scrollHint = newHint;
-        } else if (scrollHint == ScrollHint.INVALID) {
+        } else //noinspection StatementWithEmptyBody
+            if (scrollHint == ScrollHint.INVALID) {
             // scroll ranges already inconsistent since latest refresh!
             // leave at INVALID
         } else if (scrollHint.matches(newHint)) {
@@ -374,7 +375,7 @@ public class TerminalScreen extends AbstractScreen {
         }
     }
 
-    private class TerminalResizeListener implements ResizeListener {
+    private class TerminalScreenResizeListener implements TerminalResizeListener {
         @Override
         public void onResized(Terminal terminal, TerminalSize newSize) {
             addResizeRequest(newSize);
@@ -398,7 +399,9 @@ public class TerminalScreen extends AbstractScreen {
 
     private static class ScrollHint {
         public static final ScrollHint INVALID = new ScrollHint(-1,-1,0);
-        public int firstLine, lastLine, distance;
+        public final int firstLine;
+        public final int lastLine;
+        public int distance;
 
         public ScrollHint(int firstLine, int lastLine, int distance) {
             this.firstLine = firstLine;

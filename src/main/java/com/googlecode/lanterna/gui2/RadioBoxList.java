@@ -14,11 +14,13 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.gui2;
 
 import com.googlecode.lanterna.TerminalSize;
+import com.googlecode.lanterna.graphics.ThemeDefinition;
+import com.googlecode.lanterna.graphics.ThemeStyle;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 
@@ -79,8 +81,7 @@ public class RadioBoxList<V> extends AbstractListBox<V, RadioBoxList<V>> {
     public synchronized Result handleKeyStroke(KeyStroke keyStroke) {
         if(keyStroke.getKeyType() == KeyType.Enter ||
                 (keyStroke.getKeyType() == KeyType.Character && keyStroke.getCharacter() == ' ')) {
-            checkedIndex = getSelectedIndex();
-            invalidate();
+            setCheckedIndex( getSelectedIndex() );
             return Result.HANDLED;
         }
         return super.handleKeyStroke(keyStroke);
@@ -204,7 +205,7 @@ public class RadioBoxList<V> extends AbstractListBox<V, RadioBoxList<V>> {
             @Override
             public void run() {
                 for(Listener listener: listeners) {
-                    listener.onSelectionChanged(-1, previouslyChecked);
+                    listener.onSelectionChanged(checkedIndex, previouslyChecked);
                 }
             }
         });
@@ -213,7 +214,7 @@ public class RadioBoxList<V> extends AbstractListBox<V, RadioBoxList<V>> {
     /**
      * Default renderer for this component which is used unless overridden. The selected state is drawn on the left side
      * of the item label using a "&lt; &gt;" block filled with an "o" if the item is the selected one
-     * @param <V>
+     * @param <V> Type of items in the {@link RadioBoxList}
      */
     public static class RadioBoxListItemRenderer<V> extends ListItemRenderer<V,RadioBoxList<V>> {
         @Override
@@ -229,6 +230,59 @@ public class RadioBoxList<V> extends AbstractListBox<V, RadioBoxList<V>> {
 
             String text = (item != null ? item : "<null>").toString();
             return "<" + check + "> " + text;
+        }
+
+        @Override
+        public void drawItem(TextGUIGraphics graphics, RadioBoxList<V> listBox, int index, V item, boolean selected, boolean focused) {
+            ThemeDefinition themeDefinition = listBox.getTheme().getDefinition(RadioBoxList.class);
+            ThemeStyle itemStyle;
+            if(selected && !focused) {
+                itemStyle = themeDefinition.getSelected();
+            }
+            else if(selected) {
+                itemStyle = themeDefinition.getActive();
+            }
+            else if(focused) {
+                itemStyle = themeDefinition.getInsensitive();
+            }
+            else {
+                itemStyle = themeDefinition.getNormal();
+            }
+
+            if(themeDefinition.getBooleanProperty("CLEAR_WITH_NORMAL", false)) {
+                graphics.applyThemeStyle(themeDefinition.getNormal());
+                graphics.fill(' ');
+                graphics.applyThemeStyle(itemStyle);
+            }
+            else {
+                graphics.applyThemeStyle(itemStyle);
+                graphics.fill(' ');
+            }
+
+            String brackets = themeDefinition.getCharacter("LEFT_BRACKET", '<') +
+                    " " +
+                    themeDefinition.getCharacter("RIGHT_BRACKET", '>');
+            if(themeDefinition.getBooleanProperty("FIXED_BRACKET_COLOR", false)) {
+                graphics.applyThemeStyle(themeDefinition.getPreLight());
+                graphics.putString(0, 0, brackets);
+                graphics.applyThemeStyle(itemStyle);
+            }
+            else {
+                graphics.putString(0, 0, brackets);
+            }
+
+            String text = (item != null ? item : "<null>").toString();
+            graphics.putString(4, 0, text);
+
+            boolean itemChecked = listBox.checkedIndex == index;
+            char marker = themeDefinition.getCharacter("MARKER", 'o');
+            if(themeDefinition.getBooleanProperty("MARKER_WITH_NORMAL", false)) {
+                graphics.applyThemeStyle(themeDefinition.getNormal());
+            }
+            if(selected && focused && themeDefinition.getBooleanProperty("HOTSPOT_PRELIGHT", false)) {
+                graphics.applyThemeStyle(themeDefinition.getPreLight());
+            }
+            graphics.setCharacter(1, 0, (itemChecked ? marker : ' '));
         }
     }
 

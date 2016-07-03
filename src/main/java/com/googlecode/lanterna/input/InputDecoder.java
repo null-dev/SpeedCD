@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.input;
 
@@ -91,6 +91,7 @@ public class InputDecoder {
      * 
      * Negative numbers are mapped to 0 (no wait at all), and unreasonably high
      * values are mapped to a maximum of 240 (1 minute).
+     * @param units New timeout to use, in 250ms units
      */
     public void setTimeoutUnits(int units) {
         timeoutUnits = (units < 0) ? 0 :
@@ -107,6 +108,7 @@ public class InputDecoder {
 
     /**
      * Reads and decodes the next key stroke from the input stream
+     * @param blockingIO If set to {@code true}, the call will not return until it has read at least one {@link KeyStroke}
      * @return Key stroke read from the input stream, or {@code null} if none
      * @throws IOException If there was an I/O error when reading from the input stream
      */
@@ -172,11 +174,14 @@ public class InputDecoder {
                     break;
                 } else {
                     // that match, but maybe more
+
+                    //noinspection UnnecessaryContinue
                     continue;
                 }
             }
             // No match found yet, but there's still potential...
             else if ( matching.partialMatch ) {
+                //noinspection UnnecessaryContinue
                 continue;
             }
             // no longer match possible at this point:
@@ -188,6 +193,7 @@ public class InputDecoder {
                     // remove the whole fail and re-try finding a KeyStroke...
                     curSub.clear(); // or just 1 char?  currentMatching.remove(0);
                     curLen = 0;
+                    //noinspection UnnecessaryContinue
                     continue;
                 }
             }

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.gui2;
 
@@ -40,6 +40,7 @@ public abstract class AbstractWindow extends AbstractBasePane implements Window 
     private TerminalPosition lastKnownPosition;
     private TerminalPosition contentOffset;
     private Set<Hint> hints;
+    private WindowPostRenderer windowPostRenderer;
     private boolean closeWindowWithEscape;
 
     /**
@@ -171,13 +172,45 @@ public abstract class AbstractWindow extends AbstractBasePane implements Window 
     }
 
     @Override
+    public WindowPostRenderer getPostRenderer() {
+        return  windowPostRenderer;
+    }
+
+    @Override
+    public void addWindowListener(WindowListener windowListener) {
+        addBasePaneListener(windowListener);
+    }
+
+    @Override
+    public void removeWindowListener(WindowListener windowListener) {
+        removeBasePaneListener(windowListener);
+    }
+
+    /**
+     * Sets the post-renderer to use for this window. This will override the default from the GUI system (if there is
+     * one set, otherwise from the theme).
+     * @param windowPostRenderer Window post-renderer to assign to this window
+     */
+    public void setWindowPostRenderer(WindowPostRenderer windowPostRenderer) {
+        this.windowPostRenderer = windowPostRenderer;
+    }
+
+    @Override
     public final TerminalPosition getPosition() {
         return lastKnownPosition;
     }
 
     @Override
     public final void setPosition(TerminalPosition topLeft) {
+        TerminalPosition oldPosition = this.lastKnownPosition;
         this.lastKnownPosition = topLeft;
+
+        // Fire listeners
+        for(BasePaneListener listener: getBasePaneListeners()) {
+            if(listener instanceof WindowListener) {
+                ((WindowListener)listener).onMoved(this, oldPosition, topLeft);
+            }
+        }
     }
 
     @Override
@@ -191,9 +224,17 @@ public abstract class AbstractWindow extends AbstractBasePane implements Window 
     }
 
     private void setSize(TerminalSize size, boolean invalidate) {
+        TerminalSize oldSize = this.lastKnownSize;
         this.lastKnownSize = size;
         if(invalidate) {
             invalidate();
+        }
+
+        // Fire listeners
+        for(BasePaneListener listener: getBasePaneListeners()) {
+            if(listener instanceof WindowListener) {
+                ((WindowListener)listener).onResized(this, oldSize, size);
+            }
         }
     }
 

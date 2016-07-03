@@ -1,3 +1,21 @@
+/*
+ * This file is part of lanterna (http://code.google.com/p/lanterna/).
+ *
+ * lanterna is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Copyright (C) 2010-2016 Martin
+ */
 package com.googlecode.lanterna.terminal.swing;
 
 import com.googlecode.lanterna.SGR;
@@ -7,7 +25,7 @@ import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.terminal.IOSafeTerminal;
-import com.googlecode.lanterna.terminal.ResizeListener;
+import com.googlecode.lanterna.terminal.TerminalResizeListener;
 
 import javax.swing.*;
 import java.awt.*;
@@ -158,7 +176,7 @@ public class SwingTerminal extends JComponent implements IOSafeTerminal {
     /**
      * Overridden method from Swing's {@code JComponent} class that is called by OS window system when the component
      * needs to be redrawn
-     * @param {@code Graphics} object to use when drawing the component
+     * @param componentGraphics {@code Graphics} object to use when drawing the component
      */
     @Override
     protected synchronized void paintComponent(Graphics componentGraphics) {
@@ -244,6 +262,11 @@ public class SwingTerminal extends JComponent implements IOSafeTerminal {
     }
 
     @Override
+    public void bell() {
+        terminalImplementation.bell();
+    }
+
+    @Override
     public void flush() {
         terminalImplementation.flush();
     }
@@ -254,22 +277,22 @@ public class SwingTerminal extends JComponent implements IOSafeTerminal {
     }
 
     @Override
-    public KeyStroke readInput() throws IOException {
+    public KeyStroke readInput() {
         return terminalImplementation.readInput();
     }
 
     @Override
-    public TextGraphics newTextGraphics() throws IOException {
+    public TextGraphics newTextGraphics() {
         return terminalImplementation.newTextGraphics();
     }
 
     @Override
-    public void addResizeListener(ResizeListener listener) {
+    public void addResizeListener(TerminalResizeListener listener) {
         terminalImplementation.addResizeListener(listener);
     }
 
     @Override
-    public void removeResizeListener(ResizeListener listener) {
+    public void removeResizeListener(TerminalResizeListener listener) {
         terminalImplementation.removeResizeListener(listener);
     }
 }

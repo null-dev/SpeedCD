@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna;
 
@@ -27,7 +27,7 @@ package com.googlecode.lanterna;
  * 
  * @author Martin
  * @see TerminalTextUtils
- * @deprecated Use {@code TerminalTextUtils} instead
+ * @deprecated Use {@link TerminalTextUtils} instead
  */
 public class CJKUtils {    
     private CJKUtils() {
@@ -49,6 +49,8 @@ public class CJKUtils {
     }
 
     /**
+     * @param s String to measure
+     * @return Returns the width (in columns) the string will take up when printed on the screen
      * @deprecated Call {@code getColumnWidth(s)} instead
      */
     @Deprecated

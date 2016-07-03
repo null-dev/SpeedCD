@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.terminal;
 
@@ -51,7 +51,7 @@ public interface Terminal extends InputProvider {
      * supports scrolling, going into private mode will disable the scrolling and leave you with a fixed screen, which
      * can be useful if you don't want to deal with what the terminal buffer will look like if the user scrolls up.
      *
-     * @throws IOException If there was an underlying I/O error
+     * @throws java.io.IOException If there was an underlying I/O error
      * @throws IllegalStateException If you are already in private mode
      */
     void enterPrivateMode() throws IOException;
@@ -62,7 +62,7 @@ public interface Terminal extends InputProvider {
      * secondary buffer for private mode, it will probably make a new line below the private mode and place the cursor
      * there.
      *
-     * @throws IOException If there was an underlying I/O error
+     * @throws java.io.IOException If there was an underlying I/O error
      * @throws IllegalStateException If you are not in private mode
      */
     void exitPrivateMode() throws IOException;
@@ -72,7 +72,7 @@ public interface Terminal extends InputProvider {
      * cursor position is undefined after this call (depends on platform and terminal) so you should always call
      * {@code moveCursor} next. Some terminal implementations doesn't reset color and modifier state so it's also good
      * practise to call {@code resetColorAndSGR()} after this.
-     * @throws IOException If there was an underlying I/O error
+     * @throws java.io.IOException If there was an underlying I/O error
      */
     void clearScreen() throws IOException;
 
@@ -83,7 +83,7 @@ public interface Terminal extends InputProvider {
      *
      * @param x The 0-indexed column to place the cursor at
      * @param y The 0-indexed row to place the cursor at
-     * @throws IOException If there was an underlying I/O error
+     * @throws java.io.IOException If there was an underlying I/O error
      */
     void setCursorPosition(int x, int y) throws IOException;
 
@@ -91,7 +91,7 @@ public interface Terminal extends InputProvider {
      * Same as calling {@code setCursorPosition(position.getColumn(), position.getRow())}
      *
      * @param position Position to place the cursor at
-     * @throws IOException If there was an underlying I/O error
+     * @throws java.io.IOException If there was an underlying I/O error
      */
     void setCursorPosition(TerminalPosition position) throws IOException;
 
@@ -109,7 +109,7 @@ public interface Terminal extends InputProvider {
      * show up.
      *
      * @param visible Hides the text cursor if {@code false} and shows it if {@code true}
-     * @throws IOException If there was an underlying I/O error
+     * @throws java.io.IOException If there was an underlying I/O error
      */
     void setCursorVisible(boolean visible) throws IOException;
 
@@ -127,8 +127,11 @@ public interface Terminal extends InputProvider {
      * back in the days simply gave up and made each character take 2 column. It causes issues for the random terminal
      * programmer because you can't really trust 1 character = 1 column, but I suppose it's "しょうがない".
      *
+     * If you try to print non-printable control characters, the terminal is likely to ignore them (all {@link Terminal}
+     * implementations bundled with Lanterna will).
+     *
      * @param c Character to place on the terminal
-     * @throws IOException If there was an underlying I/O error
+     * @throws java.io.IOException If there was an underlying I/O error
      */
     void putCharacter(char c) throws IOException;
 
@@ -137,6 +140,7 @@ public interface Terminal extends InputProvider {
      * probably better off to switch to a Screen to make advanced text graphics more efficient. Also, this TextGraphics
      * implementation will not call {@code .flush()} after any operation, so you'll need to do that on your own.
      * @return TextGraphics implementation that draws directly using this Terminal interface
+     * @throws IOException If there was an I/O error when setting up the {@link TextGraphics} object
      */
     TextGraphics newTextGraphics() throws IOException;
 
@@ -145,7 +149,7 @@ public interface Terminal extends InputProvider {
      * that will apply to all characters written afterwards, such as bold, italic, blinking code and so on.
      *
      * @param sgr SGR code to apply
-     * @throws IOException If there was an underlying I/O error
+     * @throws java.io.IOException If there was an underlying I/O error
      * @see SGR
      * @see <a href="http://www.vt100.net/docs/vt510-rm/SGR">http://www.vt100.net/docs/vt510-rm/SGR</a>
      */
@@ -156,7 +160,7 @@ public interface Terminal extends InputProvider {
      * enableSGR(..)}.
      *
      * @param sgr SGR code to apply
-     * @throws IOException If there was an underlying I/O error
+     * @throws java.io.IOException If there was an underlying I/O error
      * @see SGR
      * @see <a href="http://www.vt100.net/docs/vt510-rm/SGR">http://www.vt100.net/docs/vt510-rm/SGR</a>
      */
@@ -165,7 +169,7 @@ public interface Terminal extends InputProvider {
     /**
      * Removes all currently active SGR codes and sets foreground and background colors back to default.
      *
-     * @throws IOException If there was an underlying I/O error
+     * @throws java.io.IOException If there was an underlying I/O error
      * @see SGR
      * @see <a href="http://www.vt100.net/docs/vt510-rm/SGR">http://www.vt100.net/docs/vt510-rm/SGR</a>
      */
@@ -182,7 +186,7 @@ public interface Terminal extends InputProvider {
      * Note to implementers of this interface, just make this method call <b>color.applyAsForeground(this);</b>
      *
      * @param color Color to use for foreground
-     * @throws IOException If there was an underlying I/O error
+     * @throws java.io.IOException If there was an underlying I/O error
      */
     void setForegroundColor(TextColor color) throws IOException;
 
@@ -197,31 +201,32 @@ public interface Terminal extends InputProvider {
      * Note to implementers of this interface, just make this method call <b>color.applyAsBackground(this);</b>
      *
      * @param color Color to use for the background
-     * @throws IOException If there was an underlying I/O error
+     * @throws java.io.IOException If there was an underlying I/O error
      */
     void setBackgroundColor(TextColor color) throws IOException;
 
     /**
-     * Adds a {@code ResizeListener} to be called when the terminal has changed size. There is no guarantee that this
-     * listener will really be invoked when the terminal has changed size, at all depends on the terminal emulator
+     * Adds a {@link TerminalResizeListener} to be called when the terminal has changed size. There is no guarantee that
+     * this listener will really be invoked when the terminal has changed size, at all depends on the terminal emulator
      * implementation. Normally on Unix systems the WINCH signal will be sent to the process and lanterna can intercept
      * this.
      * <p>
      * There are no guarantees on what thread the call will be made on, so please be careful with what kind of operation
      * you perform in this callback. You should probably not take too long to return.
      *
-     * @see ResizeListener
+     * @see TerminalResizeListener
      * @param listener Listener object to be called when the terminal has been changed
      */
-    void addResizeListener(ResizeListener listener);
+    void addResizeListener(TerminalResizeListener listener);
 
     /**
-     * Removes a {@code ResizeListener} from the list of listeners to be notified when the terminal has changed size
+     * Removes a {@link TerminalResizeListener} from the list of listeners to be notified when the terminal has changed
+     * size
      *
-     * @see ResizeListener
+     * @see TerminalResizeListener
      * @param listener Listener object to remove
      */
-    void removeResizeListener(ResizeListener listener);
+    void removeResizeListener(TerminalResizeListener listener);
 
     /**
      * Returns the size of the terminal, expressed as a {@code TerminalSize} object. Please bear in mind that depending
@@ -234,7 +239,7 @@ public interface Terminal extends InputProvider {
      * on all platforms).
      *
      * @return Size of the terminal
-     * @throws IOException if there was an I/O error trying to retrieve the size of the terminal
+     * @throws java.io.IOException if there was an I/O error trying to retrieve the size of the terminal
      */
     TerminalSize getTerminalSize() throws IOException;
 
@@ -247,15 +252,22 @@ public interface Terminal extends InputProvider {
      * but large enough to accommodate a round-trip to the user's terminal (~300 ms if you are connection across the globe).
      * @param timeoutUnit What unit to use when interpreting the {@code timeout} parameter
      * @return Answer-back message from the terminal or empty if there was nothing
-     * @throws IOException If there was an I/O error while trying to read the enquiry reply
+     * @throws java.io.IOException If there was an I/O error while trying to read the enquiry reply
      */
     byte[] enquireTerminal(int timeout, TimeUnit timeoutUnit) throws IOException;
+
+    /**
+     * Prints 0x7 to the terminal, which will make the terminal (emulator) ring a bell (or more likely beep). Not all
+     * terminals implements this. <a href="https://en.wikipedia.org/wiki/Bell_character">Wikipedia</a> has more details.
+     * @throws IOException If there was an underlying I/O error
+     */
+    void bell() throws IOException;
 
     /**
      * Calls {@code flush()} on the underlying {@code OutputStream} object, or whatever other implementation this
      * terminal is built around. Some implementing classes of this interface (like SwingTerminal) doesn't do anything
      * as it doesn't really apply to them.
-     * @throws IOException If there was an underlying I/O error
+     * @throws java.io.IOException If there was an underlying I/O error
      */
     void flush() throws IOException;
 }

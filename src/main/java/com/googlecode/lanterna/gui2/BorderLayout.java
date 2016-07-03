@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.gui2;
 
@@ -160,7 +160,7 @@ public class BorderLayout implements LayoutManager {
     }
     
     private EnumMap<Location, Component> makeLookupMap(List<Component> components) {
-        EnumMap<Location, Component> map = new EnumMap<Location, Component>(Location.class);
+        EnumMap<Location, Component> map = new EnumMap<BorderLayout.Location, Component>(Location.class);
         List<Component> unassignedComponents = new ArrayList<Component>();
         for(Component component: components) {
             if(component.getLayoutData() instanceof Location) {

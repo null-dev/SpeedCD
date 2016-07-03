@@ -1,3 +1,21 @@
+/*
+ * This file is part of lanterna (http://code.google.com/p/lanterna/).
+ *
+ * lanterna is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Copyright (C) 2010-2016 Martin
+ */
 package com.googlecode.lanterna.gui2;
 
 import com.googlecode.lanterna.TerminalPosition;
@@ -14,43 +32,33 @@ import java.util.List;
  */
 public class DefaultWindowManager implements WindowManager {
 
-    private final WindowDecorationRenderer windowDecorationRenderer;
+    private final WindowDecorationRenderer windowDecorationRendererOverride;
     private TerminalSize lastKnownScreenSize;
 
     /**
      * Default constructor, will create a window manager that uses {@code DefaultWindowDecorationRenderer} for drawing
-     * window decorations. Any size calculations done before the text GUI has actually been started and displayed on
-     * the terminal will assume the terminal size is 80x24.
+     * window decorations, unless the current theme has an override. Any size calculations done before the text GUI has
+     * actually been started and displayed on the terminal will assume the terminal size is 80x24.
      */
     public DefaultWindowManager() {
-        this(new DefaultWindowDecorationRenderer());
-    }
-
-    /**
-     * Creates a new {@code DefaultWindowManager} with a specific window decoration renderer. Any size calculations done
-     * before the text GUI has actually been started and displayed on the terminal will assume the terminal size is
-     * 80x24.
-     *
-     * @param windowDecorationRenderer Window decoration renderer to use when drawing windows
-     */
-    public DefaultWindowManager(WindowDecorationRenderer windowDecorationRenderer) {
-        this(windowDecorationRenderer, null);
+        this(null);
     }
 
     /**
      * Creates a new {@code DefaultWindowManager} using a {@code DefaultWindowDecorationRenderer} for drawing window
-     * decorations. Any size calculations done before the text GUI has actually been started and displayed on the
-     * terminal will use the size passed in with the {@code initialScreenSize} parameter
+     * decorations, unless the current theme has an override. Any size calculations done before the text GUI has
+     * actually been started and displayed on the terminal will use the size passed in with the
+     * {@code initialScreenSize} parameter (if {@code null} then size will be assumed to be 80x24)
      *
      * @param initialScreenSize Size to assume the terminal has until the text GUI is started and can be notified of the
      *                          correct size
      */
     public DefaultWindowManager(TerminalSize initialScreenSize) {
-        this(new DefaultWindowDecorationRenderer(), initialScreenSize);
+        this(null, initialScreenSize);
     }
 
     /**
-     * Creates a new {@code DefaultWindowManager} using a specified {@code windowDecorationRenderer} for drawing window
+     * Creates a new {@code DefaultWindowManager} using a specified {@code windowDecorationRendererOverride} for drawing window
      * decorations. Any size calculations done before the text GUI has actually been started and displayed on the
      * terminal will use the size passed in with the {@code initialScreenSize} parameter
      *
@@ -59,7 +67,7 @@ public class DefaultWindowManager implements WindowManager {
      *                          correct size
      */
     public DefaultWindowManager(WindowDecorationRenderer windowDecorationRenderer, TerminalSize initialScreenSize) {
-        this.windowDecorationRenderer = windowDecorationRenderer;
+        this.windowDecorationRendererOverride = windowDecorationRenderer;
         if(initialScreenSize != null) {
             this.lastKnownScreenSize = initialScreenSize;
         }
@@ -78,7 +86,15 @@ public class DefaultWindowManager implements WindowManager {
         if(window.getHints().contains(Window.Hint.NO_DECORATIONS)) {
             return new EmptyWindowDecorationRenderer();
         }
-        return windowDecorationRenderer;
+        else if(windowDecorationRendererOverride != null) {
+            return windowDecorationRendererOverride;
+        }
+        else if(window.getTheme() != null && window.getTheme().getWindowDecorationRenderer() != null) {
+            return window.getTheme().getWindowDecorationRenderer();
+        }
+        else {
+            return new DefaultWindowDecorationRenderer();
+        }
     }
 
     @Override
@@ -87,6 +103,7 @@ public class DefaultWindowManager implements WindowManager {
         TerminalSize expectedDecoratedSize = decorationRenderer.getDecoratedSize(window, window.getPreferredSize());
         window.setDecoratedSize(expectedDecoratedSize);
 
+        //noinspection StatementWithEmptyBody
         if(window.getHints().contains(Window.Hint.FIXED_POSITION)) {
             //Don't place the window, assume the position is already set
         }

@@ -14,9 +14,12 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.graphics;
+
+import com.googlecode.lanterna.gui2.WindowDecorationRenderer;
+import com.googlecode.lanterna.gui2.WindowPostRenderer;
 
 /**
  * The main theme interface, from which you can retrieve theme definitions
@@ -37,4 +40,21 @@ public interface Theme {
      * @return The ThemeDefinition for the class passed in
      */
     ThemeDefinition getDefinition(Class<?> clazz);
+
+    /**
+     * Returns a post-renderer to invoke after drawing each window, unless the GUI system or individual windows has
+     * their own renderers set. If {@code null}, no post-renderer will be done (unless the GUI system or the windows
+     * has a post-renderer).
+     * @return A {@link com.googlecode.lanterna.gui2.WindowPostRenderer} to invoke after drawing each window unless
+     * overridden, or {@code null} if none
+     */
+    WindowPostRenderer getWindowPostRenderer();
+
+    /**
+     * Returns the {@link WindowDecorationRenderer} to use for windows drawn in this theme. If {@code null} then
+     * lanterna will fall back to use {@link com.googlecode.lanterna.gui2.DefaultWindowDecorationRenderer}.
+     *
+     * @return The decoration renderer to use for this theme, or {@code null} to use system default
+     */
+    WindowDecorationRenderer getWindowDecorationRenderer();
 }

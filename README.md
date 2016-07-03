@@ -35,4 +35,4 @@ Configuration settings are available by passing in command-line arguments:
 5. You are ready to go!
 
 ## Libraries Used ##
-The only library used is [lanterna](https://github.com/mabe02/lanterna). It is embedded into the projects because it had to be modified.
+The only library used is [lanterna](https://github.com/mabe02/lanterna). It is embedded into the project because it had to be modified.

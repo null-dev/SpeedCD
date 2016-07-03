@@ -1,3 +1,21 @@
+/*
+ * This file is part of lanterna (http://code.google.com/p/lanterna/).
+ *
+ * lanterna is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Copyright (C) 2010-2016 Martin
+ */
 package com.googlecode.lanterna.input;
 
 import static com.googlecode.lanterna.input.KeyDecodingProfile.ESC_CODE;
@@ -142,7 +160,8 @@ public class EscapeSequenceCharacterPattern implements CharacterPattern {
      * @return either null (to report mis-match), or a valid KeyStroke.
      */
     protected KeyStroke getKeyStrokeRaw(char first,int num1,int num2,char last,boolean bEsc) {
-        KeyType kt = null; boolean bPuttyCtrl = false;
+        KeyType kt;
+        boolean bPuttyCtrl = false;
         if (last == '~' && stdMap.containsKey(num1)) {
             kt = stdMap.get(num1);
         } else if (finMap.containsKey(last)) {

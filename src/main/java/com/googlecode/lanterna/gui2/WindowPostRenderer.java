@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.gui2;
 
@@ -35,5 +35,8 @@ public interface WindowPostRenderer {
      * @param textGUI TextGUI that we are in
      * @param window Window that was just rendered
      */
-    void postRender(TextGraphics textGraphics, TextGUI textGUI, Window window);
+    void postRender(
+            TextGraphics textGraphics,
+            TextGUI textGUI,
+            Window window);
 }

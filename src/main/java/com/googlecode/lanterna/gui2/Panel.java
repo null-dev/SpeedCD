@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.gui2;
 
@@ -44,14 +44,22 @@ public class Panel extends AbstractComponent<Panel> implements Container {
      * {@code LinearLayout} layout manager.
      */
     public Panel() {
-        components = new ArrayList<Component>();
-        layoutManager = new LinearLayout();
-        cachedPreferredSize = null;
+        this(new LinearLayout());
+    }
+
+    public Panel(LayoutManager layoutManager) {
+        if(layoutManager == null) {
+            layoutManager = new AbsoluteLayout();
+        }
+        this.components = new ArrayList<Component>();
+        this.layoutManager = layoutManager;
+        this.cachedPreferredSize = null;
     }
 
     /**
      * Adds a new child component to the panel. Where within the panel the child will be displayed is up to the layout
-     * manager assigned to this panel.
+     * manager assigned to this panel. If the component has already been added to another panel, it will first be
+     * removed from that panel before added to this one.
      * @param component Child component to add to this panel
      * @return Itself
      */
@@ -61,6 +69,9 @@ public class Panel extends AbstractComponent<Panel> implements Container {
         }
         if(components.contains(component)) {
             return this;
+        }
+        if(component.getParent() != null) {
+            component.getParent().removeComponent(component);
         }
         components.add(component);
         component.onAdded(this);
@@ -140,7 +151,7 @@ public class Panel extends AbstractComponent<Panel> implements Container {
 
     /**
      * Returns the layout manager assigned to this panel
-     * @return
+     * @return Layout manager assigned to this panel
      */
     public LayoutManager getLayoutManager() {
         return layoutManager;
@@ -175,6 +186,11 @@ public class Panel extends AbstractComponent<Panel> implements Container {
                 if(isInvalid()) {
                     layout(graphics.getSize());
                 }
+
+                // Reset the area
+                graphics.applyThemeStyle(getThemeDefinition().getNormal());
+                graphics.fill(' ');
+
                 for(Component child: components) {
                     TextGUIGraphics componentGraphics = graphics.newTextGraphics(child.getPosition(), child.getSize());
                     child.draw(componentGraphics);
@@ -207,7 +223,7 @@ public class Panel extends AbstractComponent<Panel> implements Container {
 
         for (Component component : components) {
             if (chooseNextAvailable) {
-                if (component instanceof Interactable) {
+                if (component instanceof Interactable && ((Interactable)component).isEnabled() && ((Interactable)component).isFocusable()) {
                     return (Interactable) component;
                 }
                 else if (component instanceof Container) {
@@ -248,7 +264,7 @@ public class Panel extends AbstractComponent<Panel> implements Container {
 
         for (Component component : revComponents) {
             if (chooseNextAvailable) {
-                if (component instanceof Interactable) {
+                if (component instanceof Interactable && ((Interactable)component).isEnabled() && ((Interactable)component).isFocusable()) {
                     return (Interactable) component;
                 }
                 if (component instanceof Container) {
@@ -291,7 +307,7 @@ public class Panel extends AbstractComponent<Panel> implements Container {
             if(component instanceof Container) {
                 ((Container)component).updateLookupMap(interactableLookupMap);
             }
-            else if(component instanceof Interactable) {
+            else if(component instanceof Interactable && ((Interactable)component).isEnabled() && ((Interactable)component).isFocusable()) {
                 interactableLookupMap.add((Interactable)component);
             }
         }

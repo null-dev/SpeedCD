@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.input;
 
@@ -31,7 +31,7 @@ public interface InputProvider {
      * Returns the next {@code Key} off the input queue or null if there is no more input events available. Note, this
      * method call is <b>not</b> blocking, it returns null immediately if there is nothing on the input stream.
      * @return Key object which represents a keystroke coming in through the input stream
-     * @throws IOException Propagated error if the underlying stream gave errors
+     * @throws java.io.IOException Propagated error if the underlying stream gave errors
      */
     KeyStroke pollInput() throws IOException;
 
@@ -40,7 +40,7 @@ public interface InputProvider {
      * versions of Lanterna, this method was <b>not</b> blocking. From lanterna 3, it is blocking and you can call
      * {@code pollInput()} for the non-blocking version.
      * @return Key object which represents a keystroke coming in through the input stream
-     * @throws IOException Propagated error if the underlying stream gave errors
+     * @throws java.io.IOException Propagated error if the underlying stream gave errors
      */
     KeyStroke readInput() throws IOException;
 }

@@ -1,3 +1,21 @@
+/*
+ * This file is part of lanterna (http://code.google.com/p/lanterna/).
+ *
+ * lanterna is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Copyright (C) 2010-2016 Martin
+ */
 package com.googlecode.lanterna.gui2.table;
 
 import java.util.*;
@@ -145,7 +163,7 @@ public class TableModel<V> {
     public synchronized TableModel<V> insertRow(int index, Collection<V> values) {
         ArrayList<V> list = new ArrayList<V>(values);
         rows.add(index, list);
-        for(Listener listener: listeners) {
+        for(Listener<V> listener: listeners) {
             listener.onRowAdded(this, index);
         }
         return this;
@@ -158,7 +176,7 @@ public class TableModel<V> {
      */
     public synchronized TableModel<V> removeRow(int index) {
         List<V> removedRow = rows.remove(index);
-        for(Listener listener: listeners) {
+        for(Listener<V> listener: listeners) {
             listener.onRowRemoved(this, index, removedRow);
         }
         return this;
@@ -223,7 +241,7 @@ public class TableModel<V> {
             }
         }
 
-        for(Listener listener: listeners) {
+        for(Listener<V> listener: listeners) {
             listener.onColumnAdded(this, index);
         }
         return this;
@@ -240,7 +258,7 @@ public class TableModel<V> {
         for(List<V> row : rows) {
             removedColumn.add(row.remove(index));
         }
-        for(Listener listener: listeners) {
+        for(Listener<V> listener: listeners) {
             listener.onColumnRemoved(this, index, removedColumnHeader, removedColumn);
         }
         return this;
@@ -286,7 +304,7 @@ public class TableModel<V> {
             return this;
         }
         row.set(columnIndex, value);
-        for(Listener listener: listeners) {
+        for(Listener<V> listener: listeners) {
             listener.onCellChanged(this, rowIndex, columnIndex, existingValue, value);
         }
         return this;

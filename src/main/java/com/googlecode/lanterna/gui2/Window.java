@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.gui2;
 
@@ -242,6 +242,29 @@ public interface Window extends BasePane {
      * this yourself.
      */
     void waitUntilClosed();
+
+    /**
+     * Returns a post-renderer the GUI system should invoke after the window has been drawn. This can be used to
+     * creating effects like shadows, overlays, etc. If this returns {@code null}, the GUI system will fall back to
+     * it's own global override and after that to the current theme. If these are all {@code null}, no post-rendering
+     * is done.
+     * @return {@link WindowPostRenderer} to invoke after this window is drawn, or {@code null} fallback to the GUI
+     * system's default.
+     */
+    WindowPostRenderer getPostRenderer();
+
+    /**
+     * Adds a {@link WindowListener} to this {@link Window}. If it has already been added, the call will do nothing.
+     * @param windowListener Listener to attach to this {@link Window}
+     */
+    void addWindowListener(WindowListener windowListener);
+
+    /**
+     * Removes a {@link WindowListener} from this {@link Window}. If the listener isn't in the list of listeners, this
+     * call does nothing.
+     * @param windowListener Listener to remove from this {@link Window}
+     */
+    void removeWindowListener(WindowListener windowListener);
 
     ///////////////////////////////////////////////////////////////
     //// Below here are methods from BasePane                  ////

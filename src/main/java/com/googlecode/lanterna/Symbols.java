@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 
 package com.googlecode.lanterna;
@@ -128,6 +128,23 @@ public class Symbols {
      * ░
      */
     public static final char BLOCK_SPARSE = 0x2591;
+
+    /**
+     * ►
+     */
+    public static final char TRIANGLE_RIGHT_POINTING_BLACK = 0x25BA;
+    /**
+     * ◄
+     */
+    public static final char TRIANGLE_LEFT_POINTING_BLACK = 0x25C4;
+    /**
+     * ▲
+     */
+    public static final char TRIANGLE_UP_POINTING_BLACK = 0x25B2;
+    /**
+     * ▼
+     */
+    public static final char TRIANGLE_DOWN_POINTING_BLACK = 0x25BC;
 
     /**
      * ⏴

@@ -14,9 +14,12 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.graphics;
+
+import com.googlecode.lanterna.gui2.Component;
+import com.googlecode.lanterna.gui2.ComponentRenderer;
 
 /**
  * A ThemeDefinition contains a collection of ThemeStyle:s, which defines on a lower level which colors and SGRs to
@@ -60,10 +63,10 @@ public interface ThemeDefinition {
     ThemeStyle getInsensitive();
 
     /**
-     * Retrieves a custom ThemeStyle, if one is available by this name. Will return null if no such style could be found
-     * within this ThemeDefinition. You can use this if you need more categories than the ones available above.
+     * Retrieves a custom ThemeStyle, if one is available by this name. You can use this if you need more categories
+     * than the ones available above.
      * @param name Name of the style to look up
-     * @return The ThemeStyle associated with the name, or {@code null} if there was no such style
+     * @return The ThemeStyle associated with the name
      */
     ThemeStyle getCustom(String name);
 
@@ -78,6 +81,25 @@ public interface ThemeDefinition {
     ThemeStyle getCustom(String name, ThemeStyle defaultValue);
 
     /**
+     * Retrieves a custom boolean property, if one is available by this name. Will return a supplied default value if
+     * no such property could be found within this {@link ThemeDefinition}.
+     * @param name Name of the boolean property to look up
+     * @param defaultValue What to return if the there is no property with this name
+     * @return The property value stored in this theme definition, parsed as a boolean
+     */
+    boolean getBooleanProperty(String name, boolean defaultValue);
+
+    /**
+     * Asks the theme definition for this component if the theme thinks that the text cursor should be visible or not.
+     * Note that certain components might have a visible state depending on the context and the current data set, in
+     * those cases it can use {@link #getBooleanProperty(String, boolean)} to allow themes more fine-grained control
+     * over when cursor should be visible or not.
+     * @return A hint to the renderer as to if this theme thinks the cursor should be visible (returns {@code true}) or
+     * not (returns {@code false})
+     */
+    boolean isCursorVisible();
+
+    /**
      * Retrieves a character from this theme definition by the specified name. This method cannot return {@code null} so
      * you need to give a fallback in case the definition didn't have any character by this name.
      * @param name Name of the character to look up
@@ -88,9 +110,13 @@ public interface ThemeDefinition {
     char getCharacter(String name, char fallback);
 
     /**
-     * Returns the class name of the ComponentRenderer attached to this definition. If none is declared, it will return
-     * {@code null} instead of going up in the hierarchy, unlike the other methods of this interface.
-     * @return Full name of the renderer class or {@code null}
+     * Returns a {@link ComponentRenderer} attached to this definition for the specified type. Generally one theme
+     * definition is linked to only one component type so it wouldn't need the type parameter to figure out what to
+     * return. unlike the other methods of this interface, it will not traverse up in the theme hierarchy if this field
+     * is not defined, instead the component will use its default component renderer.
+     * @param type Component class to get the theme's renderer for
+     * @return Renderer to use for the {@code type} component or {@code null} to use the default
+     * @param <T> Type of component
      */
-    String getRenderer();
+    <T extends Component> ComponentRenderer<T> getRenderer(Class<T> type);
 }

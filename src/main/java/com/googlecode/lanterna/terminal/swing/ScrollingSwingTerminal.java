@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.terminal.swing;
 
@@ -23,9 +23,9 @@ import com.googlecode.lanterna.TerminalPosition;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.terminal.IOSafeTerminal;
-import com.googlecode.lanterna.terminal.ResizeListener;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextColor;
+import com.googlecode.lanterna.terminal.TerminalResizeListener;
 
 import java.awt.*;
 import java.awt.event.AdjustmentEvent;
@@ -176,7 +176,7 @@ public class ScrollingSwingTerminal extends JComponent implements IOSafeTerminal
     }
 
     @Override
-    public KeyStroke readInput() throws IOException {
+    public KeyStroke readInput() {
         return swingTerminal.readInput();
     }
 
@@ -221,7 +221,7 @@ public class ScrollingSwingTerminal extends JComponent implements IOSafeTerminal
     }
 
     @Override
-    public TextGraphics newTextGraphics() throws IOException {
+    public TextGraphics newTextGraphics() {
         return swingTerminal.newTextGraphics();
     }
 
@@ -261,17 +261,22 @@ public class ScrollingSwingTerminal extends JComponent implements IOSafeTerminal
     }
 
     @Override
+    public void bell() {
+        swingTerminal.bell();
+    }
+
+    @Override
     public void flush() {
         swingTerminal.flush();
     }
 
     @Override
-    public void addResizeListener(ResizeListener listener) {
+    public void addResizeListener(TerminalResizeListener listener) {
         swingTerminal.addResizeListener(listener);
     }
 
     @Override
-    public void removeResizeListener(ResizeListener listener) {
+    public void removeResizeListener(TerminalResizeListener listener) {
         swingTerminal.removeResizeListener(listener);
     }
 }

@@ -14,15 +14,20 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.gui2;
 
 import com.googlecode.lanterna.TerminalPosition;
 import com.googlecode.lanterna.TerminalSize;
+import com.googlecode.lanterna.graphics.Theme;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 import com.googlecode.lanterna.input.MouseAction;
+
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This abstract implementation of {@code BasePane} has the common code shared by all different concrete
@@ -30,18 +35,22 @@ import com.googlecode.lanterna.input.MouseAction;
  */
 public abstract class AbstractBasePane implements BasePane {
     protected final ContentHolder contentHolder;
+    private final CopyOnWriteArrayList<BasePaneListener> listeners;
     protected InteractableLookupMap interactableLookupMap;
     private Interactable focusedInteractable;
     private boolean invalid;
     private boolean strictFocusChange;
     private boolean enableDirectionBasedMovements;
+    private Theme theme;
 
     protected AbstractBasePane() {
         this.contentHolder = new ContentHolder();
+        this.listeners = new CopyOnWriteArrayList<BasePaneListener>();
         this.interactableLookupMap = new InteractableLookupMap(new TerminalSize(80, 25));
         this.invalid = false;
         this.strictFocusChange = false;
         this.enableDirectionBasedMovements = true;
+        this.theme = null;
     }
 
     @Override
@@ -59,7 +68,7 @@ public abstract class AbstractBasePane implements BasePane {
 
     @Override
     public void draw(TextGUIGraphics graphics) {
-        graphics.applyThemeStyle(graphics.getThemeDefinition(Window.class).getNormal());
+        graphics.applyThemeStyle(getTheme().getDefinition(Window.class).getNormal());
         graphics.fill(' ');
         contentHolder.draw(graphics);
 
@@ -75,6 +84,30 @@ public abstract class AbstractBasePane implements BasePane {
 
     @Override
     public boolean handleInput(KeyStroke key) {
+        // Fire events first and decide if the event should be sent to the focused component or not
+        AtomicBoolean deliverEvent = new AtomicBoolean(true);
+        for (BasePaneListener listener : listeners) {
+            listener.onInput(this, key, deliverEvent);
+        }
+        if (!deliverEvent.get()) {
+            return true;
+        }
+
+        // Now try to deliver the event to the focused component
+        boolean handled = doHandleInput(key);
+
+        // If it wasn't handled, fire the listeners and decide what to report to the TextGUI
+        if(!handled) {
+            AtomicBoolean hasBeenHandled = new AtomicBoolean(false);
+            for(BasePaneListener listener: listeners) {
+                listener.onUnhandledInput(this, key, hasBeenHandled);
+            }
+            handled = hasBeenHandled.get();
+        }
+        return handled;
+    }
+
+    private boolean doHandleInput(KeyStroke key) {
         if(key.getKeyType() == KeyType.MouseEvent) {
             MouseAction mouseAction = (MouseAction)key;
             TerminalPosition localCoordinates = fromGlobal(mouseAction.getPosition());
@@ -199,6 +232,9 @@ public abstract class AbstractBasePane implements BasePane {
         if(focusedInteractable == toFocus) {
             return;
         }
+        if(toFocus != null && !toFocus.isEnabled()) {
+            return;
+        }
         if(focusedInteractable != null) {
             focusedInteractable.onLeaveFocus(direction, focusedInteractable);
         }
@@ -218,6 +254,34 @@ public abstract class AbstractBasePane implements BasePane {
     @Override
     public void setEnableDirectionBasedMovements(boolean enableDirectionBasedMovements) {
         this.enableDirectionBasedMovements = enableDirectionBasedMovements;
+    }
+
+    @Override
+    public synchronized Theme getTheme() {
+        if(theme != null) {
+            return theme;
+        }
+        else if(getTextGUI() != null) {
+            return getTextGUI().getTheme();
+        }
+        return null;
+    }
+
+    @Override
+    public synchronized void setTheme(Theme theme) {
+        this.theme = theme;
+    }
+
+    protected void addBasePaneListener(BasePaneListener basePaneListener) {
+        listeners.addIfAbsent(basePaneListener);
+    }
+
+    protected void removeBasePaneListener(BasePaneListener basePaneListener) {
+        listeners.remove(basePaneListener);
+    }
+
+    protected List<BasePaneListener> getBasePaneListeners() {
+        return listeners;
     }
 
     protected class ContentHolder extends AbstractComposite<Container> {

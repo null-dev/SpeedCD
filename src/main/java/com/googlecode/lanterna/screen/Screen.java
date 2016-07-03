@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright (C) 2010-2015 Martin
+ * Copyright (C) 2010-2016 Martin
  */
 package com.googlecode.lanterna.screen;
 
@@ -186,7 +186,7 @@ public interface Screen extends InputProvider, Scrollable {
      * This method will take the content from the back-buffer and move it into the front-buffer, making the changes
      * visible to the terminal in the process. The graphics workflow with Screen would involve drawing text and text-like
      * graphics on the back buffer and then finally calling refresh(..) to make it visible to the user.
-     * @throws IOException If there was an underlying I/O error
+     * @throws java.io.IOException If there was an underlying I/O error
      * @see RefreshType
      */
     void refresh() throws IOException;
@@ -199,7 +199,7 @@ public interface Screen extends InputProvider, Scrollable {
      * Using this method call instead of {@code refresh()} gives you a little bit more control over how the screen will
      * be refreshed.
      * @param refreshType What type of refresh to do
-     * @throws IOException If there was an underlying I/O error
+     * @throws java.io.IOException If there was an underlying I/O error
      * @see RefreshType
      */
     void refresh(RefreshType refreshType) throws IOException;
