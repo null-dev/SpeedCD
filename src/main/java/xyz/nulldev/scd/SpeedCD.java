@@ -454,6 +454,9 @@ public class SpeedCD {
                                             searchText = null;
                                         }
                                         filesDirty = true;
+                                    } else {
+                                        //No parent file!
+                                        terminal.bell();
                                     }
                                 }
                             } else if (stroke.getKeyType() == KeyType.Escape) {
