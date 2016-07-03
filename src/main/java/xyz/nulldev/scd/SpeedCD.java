@@ -48,8 +48,8 @@ public class SpeedCD {
     public static String SEARCH_NO_RESULTS_WARNING_NO_CLEAR = "The search returned no results (or this directory is empty)!";
     public static String SEARCH_PREFIX = "SEARCH: ";
 
-    static final int MAX_COLUMNS_DIVISOR = 10;
-    static final int MAX_PATH_WIDTH_DIVISOR = 2;
+    public static final int MAX_COLUMNS_DIVISOR = 10;
+    public static final int MAX_PATH_WIDTH_DIVISOR = 2;
 
     public static boolean isHidden(File file) {
         String fileName = file.getName();

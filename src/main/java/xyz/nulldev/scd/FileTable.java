@@ -24,12 +24,12 @@ public class FileTable {
 
     public static String CUT_OFF_STRING = "...";
 
-    int cursorIndex;
-    File[][] fileTable;
-    int columns;
-    int rows;
-    int lastColumnWithFiles;
-    int maxFiles;
+    private int cursorIndex;
+    private File[][] fileTable;
+    private int columns;
+    private int rows;
+    private int lastColumnWithFiles;
+    private int maxFiles;
 
     public static FileTable[] generateFileTables(List<File> files, int columns, int rows) {
         int extraFiles = files.size() % rows;
