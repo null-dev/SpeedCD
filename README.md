@@ -3,7 +3,7 @@
 
 ## About ##
 SpeedCD is a CLI program that allows you to navigate any filesystem at the speed of light!
-SpeedCD is **not** a file manager, it will not open/maniplate files.
+SpeedCD is **not** a file manager, it will not open/manipulate files.
 Check out a demo here (ignore the flickering, it's because of the recording software):
 [![asciicast](https://asciinema.org/a/2wedxpqaf8nsojx9lep5ki9zv.png)](https://asciinema.org/a/2wedxpqaf8nsojx9lep5ki9zv)
 The usage of SpeedCD starts at: [0:27](https://asciinema.org/a/2wedxpqaf8nsojx9lep5ki9zv?t=0:27)
@@ -19,13 +19,15 @@ Press: <kbd>CTRL</kbd>+<kbd>r</kbd> to refresh the view (if files have been adde
 Press: <kbd>CTRL</kbd>+<kbd>h</kbd> to hide/show hidden files<br>
 Press: <kbd>CTRL</kbd>+<kbd>f</kbd> to hide/show files<br>
 Use the arrow keys to move the cursor.<br>
-Press any letter/number on the keyboard to jump to the first file that starts with that letter/number.<br>
-Press: <kbd>ESC</kbd> to open a shell in the current directory<br>
+Type anything to search for files in the current directory.<br>
+Press: <kbd>ESC</kbd> to open a shell in the current directory (if you have a search running, this will cancel the search).<br>
 
 ## Configuration ##
 Configuration settings are available by passing in command-line arguments:
-* `--shell=` Specify the shell to be opened when <kbd>ESC</kbd> is pressed. Example: `--shell=zsh`
-* `--pathFile=` Specify a file to write the resulting path to when <kbd>ESC</kbd> is pressed. Overrides `--shell=` Example: `--pathFile=/tmp/speedcd.123456.tmp`
+* `--shell=`: Specify the shell to be opened when <kbd>ESC</kbd> is pressed. Example: `--shell=zsh`
+* `--pathFile=`: Specify a file to write the resulting path to when <kbd>ESC</kbd> is pressed. Overrides `--shell=` Example: `--pathFile=/tmp/speedcd.123456.tmp`
+* `--clearSearchOnDirectorySwitch`: `true` or `false`, specifies whether or not to clear the current search (if any) when you move into a new directory. Defaults to `true`.
+* `--caseSensitiveSearch`: `true` or `false`, specifies whether or not searching is case sensitive.
 
 ## Installation ##
 1. Download and install the Java 7 runtime.
@@ -35,4 +37,4 @@ Configuration settings are available by passing in command-line arguments:
 5. You are ready to go!
 
 ## Libraries Used ##
-The only library used is [lanterna](https://github.com/mabe02/lanterna). It is embedded into the project because it had to be modified.
+The only library used is [lanterna](https://github.com/mabe02/lanterna).
